@@ -1,0 +1,131 @@
+{
+  "name": "bluetext-setup",
+  "displayName": "Bluetext Setup Assistant",
+  "description": "Step-by-step setup wizard for Bluetext with Polytope, configuring files for MCP servers and coding agents",
+  "version": "1.0.0",
+  "publisher": "bluetext",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "bluetext",
+    "polytope",
+    "mcp",
+    "claude",
+    "cline",
+    "setup",
+    "wizard"
+  ],
+  "activationEvents": [
+    "onCommand:bluetext.setupWizard",
+    "onCommand:bluetext.createPolytopeYml",
+    "onCommand:bluetext.configureCline",
+    "onCommand:bluetext.configureClaudeCode",
+    "onCommand:bluetext.initGit",
+    "onCommand:bluetext.startMCP",
+    "onCommand:bluetext.flightCheck",
+    "onCommand:bluetext.clearTerminal"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bluetext.setupWizard",
+        "title": "Bluetext: Complete Setup Wizard",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.createPolytopeYml",
+        "title": "Bluetext: Create polytope.yml",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.configureCline",
+        "title": "Bluetext: Configure Cline MCP",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.configureClaudeCode",
+        "title": "Bluetext: Configure Claude Code MCP",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.initGit",
+        "title": "Bluetext: Initialize Git Repository",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.startMCP",
+        "title": "Bluetext: Start MCP Server",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.flightCheck",
+        "title": "Bluetext: Run Flight Check",
+        "category": "Bluetext"
+      },
+      {
+        "command": "bluetext.clearTerminal",
+        "title": "Bluetext: Clear Terminal Output",
+        "category": "Bluetext"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "bluetext.setupWizard",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Bluetext Setup",
+      "properties": {
+        "bluetext.mcpPort": {
+          "type": "number",
+          "default": 31338,
+          "description": "Port for the MCP server"
+        },
+        "bluetext.autoStartMCP": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start MCP server after setup"
+        },
+        "bluetext.preferredAgent": {
+          "type": "string",
+          "enum": [
+            "cline",
+            "claude-code",
+            "both"
+          ],
+          "default": "cline",
+          "description": "Preferred coding agent for configuration"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^20.x",
+    "@typescript-eslint/eslint-plugin": "^6.x",
+    "@typescript-eslint/parser": "^6.x",
+    "eslint": "^8.x",
+    "typescript": "^5.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluetext-io/bluetext.git"
+  },
+  "license": "MIT"
+}
