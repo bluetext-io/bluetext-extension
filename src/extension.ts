@@ -152,23 +152,32 @@ async function configureCline() {
     const config = vscode.workspace.getConfiguration('bluetext');
     const mcpPort = config.get<number>('mcpPort', 31338);
 
-    // Get Cline MCP settings path - works for both VSCode and VSCodium
-    const appData = process.env.APPDATA || 
-                    (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') : 
-                     path.join(os.homedir(), '.config'));
-    
-    // Detect if using VSCodium or VSCode
-    const editorName = vscode.env.appName.toLowerCase().includes('vscodium') ? 'VSCodium' : 'Code';
-    
-    const clineSettingsPath = path.join(
-        appData,
-        editorName,
-        'User',
-        'globalStorage',
-        'saoudrizwan.claude-dev',
-        'settings',
-        'cline_mcp_settings.json'
-    );
+    // Check for code-server path first
+    const codeServerPath = '/root/.local/share/code-server/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json';
+    let clineSettingsPath: string;
+
+    if (fs.existsSync(path.dirname(codeServerPath))) {
+        clineSettingsPath = codeServerPath;
+        logToTerminal('Detected code-server environment', 'info');
+    } else {
+        // Get Cline MCP settings path - works for both VSCode and VSCodium
+        const appData = process.env.APPDATA || 
+                        (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') : 
+                         path.join(os.homedir(), '.config'));
+        
+        // Detect if using VSCodium or VSCode
+        const editorName = vscode.env.appName.toLowerCase().includes('vscodium') ? 'VSCodium' : 'Code';
+        
+        clineSettingsPath = path.join(
+            appData,
+            editorName,
+            'User',
+            'globalStorage',
+            'saoudrizwan.claude-dev',
+            'settings',
+            'cline_mcp_settings.json'
+        );
+    }
 
     logToTerminal(`Settings path: ${clineSettingsPath}`, 'info');
 
