@@ -193,8 +193,16 @@ async function configureCline() {
         let config: any = { mcpServers: {} };
         if (fs.existsSync(clineSettingsPath)) {
             logToTerminal('Reading existing Cline settings...', 'info');
-            const existingContent = fs.readFileSync(clineSettingsPath, 'utf8');
-            config = JSON.parse(existingContent);
+            try {
+                const existingContent = fs.readFileSync(clineSettingsPath, 'utf8');
+                if (existingContent.trim()) {
+                    config = JSON.parse(existingContent);
+                } else {
+                    logToTerminal('Existing file is empty, creating new config...', 'info');
+                }
+            } catch (parseError) {
+                logToTerminal('Existing file has invalid JSON, creating new config...', 'info');
+            }
         } else {
             logToTerminal('Creating new Cline settings file...', 'info');
         }
