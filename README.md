@@ -10,8 +10,6 @@ Launch the interactive setup wizard that guides you through all configuration st
 - Create polytope.yml configuration
 - Configure Cline or Claude Code MCP settings
 - Start the MCP server
-- Run flight check to verify setup
-
 ### 🛠️ Individual Commands
 
 The extension provides individual commands for each setup step:
@@ -22,7 +20,6 @@ The extension provides individual commands for each setup step:
 - **Bluetext: Configure Claude Code MCP** - Execute Claude Code MCP configuration command
 - **Bluetext: Initialize Git Repository** - Initialize git in your project
 - **Bluetext: Start MCP Server** - Start the Polytope MCP server
-- **Bluetext: Run Flight Check** - Verify your setup is correct
 
 ## Requirements
 
@@ -83,11 +80,6 @@ You can also run individual commands:
    ```
    This runs: `pt run --mcp`
 
-5. **Verify Setup**:
-   ```
-   Command: Bluetext: Run Flight Check
-   ```
-
 ## Configuration
 
 The extension provides the following configuration options (accessible via Settings):
@@ -146,10 +138,9 @@ Ensure you've created the file using the extension command or manually create it
 3. Ensure port 31338 is not in use
 
 ### Cline not connecting
-1. Run the flight check command
-2. Verify Cline extension is installed
-3. Check MCP settings file exists and is properly formatted
-4. Restart VSCode/VSCodium
+1. Verify Cline extension is installed
+2. Check MCP settings file exists and is properly formatted
+3. Restart VSCode/VSCodium
 
 ### Agent doesn't see tools
 1. Ensure MCP server is running (`pt run --mcp`)

@@ -12,7 +12,6 @@ All notable changes to the "bluetext-setup" extension will be documented in this
 - Claude Code MCP configuration support
 - Git repository initialization
 - MCP server startup integration
-- Flight check verification system
 - Cross-platform support (macOS, Windows, Linux)
 - VSCode and VSCodium compatibility
 - Configurable MCP port setting
@@ -22,7 +21,6 @@ All notable changes to the "bluetext-setup" extension will be documented in this
   - Configure Claude Code
   - Initialize Git
   - Start MCP Server
-  - Run Flight Check
 - Comprehensive documentation and troubleshooting guide
 
 ### Features
@@ -30,7 +28,6 @@ All notable changes to the "bluetext-setup" extension will be documented in this
 - **File Configuration**: Automated creation and configuration of necessary files
 - **MCP Integration**: Seamless integration with Model Context Protocol servers
 - **Coding Agent Support**: Built-in support for Cline and Claude Code
-- **Verification Tools**: Flight check system to verify correct configuration
 - **User-Friendly**: Clear error messages and helpful prompts throughout the process
 
 ### Documentation

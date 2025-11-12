@@ -17,7 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('bluetext.configureClaudeCode', configureClaudeCode),
         vscode.commands.registerCommand('bluetext.initGit', initGit),
         vscode.commands.registerCommand('bluetext.startMCP', startMCP),
-        vscode.commands.registerCommand('bluetext.flightCheck', flightCheck),
         vscode.commands.registerCommand('bluetext.clearTerminal', clearTerminal)
     );
 }
@@ -82,8 +81,8 @@ async function setupWizard() {
                 case 'startMCP':
                     await startMCP();
                     break;
-                case 'flightCheck':
-                    await flightCheck();
+                case 'quickStart':
+                    await runQuickStart(message.agentChoice);
                     break;
                 case 'clearTerminal':
                     // Already handled via global command
@@ -99,7 +98,7 @@ async function setupWizard() {
     logToTerminal('Click any setup button to begin', 'info');
 }
 
-async function createPolytopeYml() {
+async function createPolytopeYml(skipPrompt: boolean = false): Promise<boolean> {
     logToTerminal('Creating polytope.yml...', 'command');
     
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -107,13 +106,35 @@ async function createPolytopeYml() {
         const errorMsg = 'Please open a workspace folder first';
         vscode.window.showErrorMessage(errorMsg);
         logToTerminal(errorMsg, 'error');
-        return;
+        return false;
     }
 
     const polytopeYmlPath = path.join(workspaceFolder.uri.fsPath, 'polytope.yml');
+    const polytopeContent = `include:
+  - repo: gh:bluetext-io/bluetext
+`;
 
     // Check if file already exists
     if (fs.existsSync(polytopeYmlPath)) {
+        // Check if existing file has the correct content
+        try {
+            const existingContent = fs.readFileSync(polytopeYmlPath, 'utf8').trim();
+            const requiredContent = polytopeContent.trim();
+            
+            if (existingContent === requiredContent) {
+                logToTerminal('polytope.yml already exists with correct configuration', 'success');
+                return true; // File exists with correct config
+            }
+        } catch (error) {
+            logToTerminal(`Error reading existing polytope.yml: ${error}`, 'error');
+        }
+        
+        // File exists but has different content
+        if (skipPrompt) {
+            logToTerminal('polytope.yml exists with different content, skipping...', 'info');
+            return true; // Don't fail the quick start
+        }
+        
         logToTerminal('polytope.yml already exists', 'info');
         const overwrite = await vscode.window.showWarningMessage(
             'polytope.yml already exists. Do you want to overwrite it?',
@@ -121,13 +142,9 @@ async function createPolytopeYml() {
         );
         if (overwrite !== 'Yes') {
             logToTerminal('Operation cancelled by user', 'info');
-            return;
+            return false;
         }
     }
-
-    const polytopeContent = `include:
-  - repo: gh:bluetext-io/bluetext
-`;
 
     try {
         fs.writeFileSync(polytopeYmlPath, polytopeContent, 'utf8');
@@ -136,13 +153,17 @@ async function createPolytopeYml() {
         logToTerminal(successMsg, 'success');
         logToTerminal(`File location: ${polytopeYmlPath}`, 'info');
         
-        // Open the file
-        const document = await vscode.workspace.openTextDocument(polytopeYmlPath);
-        await vscode.window.showTextDocument(document);
+        // Open the file only if not in skip prompt mode
+        if (!skipPrompt) {
+            const document = await vscode.workspace.openTextDocument(polytopeYmlPath);
+            await vscode.window.showTextDocument(document);
+        }
+        return true;
     } catch (error) {
         const errorMsg = `Failed to create polytope.yml: ${error}`;
         vscode.window.showErrorMessage(errorMsg);
         logToTerminal(errorMsg, 'error');
+        return false;
     }
 }
 
@@ -331,59 +352,93 @@ async function startMCP() {
     logToTerminal(msg, 'success');
 }
 
-async function flightCheck() {
-    const panel = vscode.window.createWebviewPanel(
-        'bluetextFlightCheck',
-        'Bluetext Flight Check',
-        vscode.ViewColumn.One,
-        {}
-    );
+// Helper function to update step status in the UI
+function updateStepStatus(stepNumber: number, status: 'pending' | 'doing' | 'done' | 'error') {
+    if (wizardPanel) {
+        wizardPanel.webview.postMessage({
+            command: 'updateStepStatus',
+            stepNumber: stepNumber,
+            status: status
+        });
+    }
+}
 
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    const checks = [];
-
-    // Check 1: Workspace folder
-    checks.push({
-        name: 'Workspace folder',
-        passed: !!workspaceFolder,
-        message: workspaceFolder ? '✅ Workspace folder is open' : '❌ No workspace folder open'
-    });
-
-    // Check 2: polytope.yml exists
-    const polytopeExists = workspaceFolder ? 
-        fs.existsSync(path.join(workspaceFolder.uri.fsPath, 'polytope.yml')) : false;
-    checks.push({
-        name: 'polytope.yml',
-        passed: polytopeExists,
-        message: polytopeExists ? '✅ polytope.yml found' : '❌ polytope.yml not found'
-    });
-
-    // Check 3: Git initialized
-    const gitExists = workspaceFolder ? 
-        fs.existsSync(path.join(workspaceFolder.uri.fsPath, '.git')) : false;
-    checks.push({
-        name: 'Git repository',
-        passed: gitExists,
-        message: gitExists ? '✅ Git repository initialized' : '⚠️ Git not initialized (recommended)'
-    });
-
-    // Check 4: Cline settings
-    const appData = process.env.APPDATA || 
-                    (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') : 
-                     path.join(os.homedir(), '.config'));
-    const editorName = vscode.env.appName.toLowerCase().includes('vscodium') ? 'VSCodium' : 'Code';
-    const clineSettingsPath = path.join(
-        appData, editorName, 'User', 'globalStorage', 
-        'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'
-    );
-    const clineConfigured = fs.existsSync(clineSettingsPath);
-    checks.push({
-        name: 'Cline MCP settings',
-        passed: clineConfigured,
-        message: clineConfigured ? '✅ Cline settings found' : '⚠️ Cline not configured yet'
-    });
-
-    panel.webview.html = getFlightCheckHtml(checks);
+// Quick Start function that runs all steps in sequence
+async function runQuickStart(agentChoice: 'cline' | 'claude') {
+    logToTerminal('='.repeat(50), 'info');
+    logToTerminal('🚀 Starting Quick Setup...', 'command');
+    logToTerminal('='.repeat(50), 'info');
+    
+    // Step 1: Initialize Git
+    updateStepStatus(1, 'doing');
+    logToTerminal('\n📦 Step 1/4: Initializing Git repository...', 'command');
+    try {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (workspaceFolder) {
+            const gitPath = path.join(workspaceFolder.uri.fsPath, '.git');
+            if (!fs.existsSync(gitPath)) {
+                await initGit();
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for git init
+            } else {
+                logToTerminal('Git already initialized, skipping...', 'info');
+            }
+        }
+        updateStepStatus(1, 'done');
+    } catch (error) {
+        logToTerminal(`Git initialization failed: ${error}`, 'error');
+        updateStepStatus(1, 'error');
+    }
+    
+    // Step 2: Create polytope.yml
+    updateStepStatus(2, 'doing');
+    logToTerminal('\n📄 Step 2/4: Creating polytope.yml...', 'command');
+    try {
+        const success = await createPolytopeYml(true); // Skip prompts during quick start
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (success) {
+            updateStepStatus(2, 'done');
+        } else {
+            updateStepStatus(2, 'error');
+            return; // Stop if this critical step fails
+        }
+    } catch (error) {
+        logToTerminal(`Failed to create polytope.yml: ${error}`, 'error');
+        updateStepStatus(2, 'error');
+        return; // Stop if this critical step fails
+    }
+    
+    // Step 3: Configure Agent
+    updateStepStatus(3, 'doing');
+    logToTerminal(`\n⚙️  Step 3/4: Configuring ${agentChoice === 'cline' ? 'Cline' : 'Claude Code'}...`, 'command');
+    try {
+        if (agentChoice === 'cline') {
+            await configureCline();
+        } else {
+            await configureClaudeCode();
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        updateStepStatus(3, 'done');
+    } catch (error) {
+        logToTerminal(`Agent configuration failed: ${error}`, 'error');
+        updateStepStatus(3, 'error');
+    }
+    
+    // Step 4: Start MCP Server
+    updateStepStatus(4, 'doing');
+    logToTerminal('\n🚀 Step 4/4: Starting MCP server...', 'command');
+    try {
+        await startMCP();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        updateStepStatus(4, 'done');
+    } catch (error) {
+        logToTerminal(`Failed to start MCP server: ${error}`, 'error');
+        updateStepStatus(4, 'error');
+    }
+    
+    logToTerminal('\n' + '='.repeat(50), 'info');
+    logToTerminal('✅ Quick Setup Complete!', 'success');
+    logToTerminal('='.repeat(50), 'info');
+    logToTerminal('\nYou can now start using Bluetext tools with your coding agent!', 'info');
 }
 
 function getWizardHtml(): string {
@@ -651,6 +706,155 @@ function getWizardHtml(): string {
             color: #1e3c72;
             text-decoration: underline;
         }
+        
+        /* Quick Start Section */
+        .quick-start-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #2a5298;
+            margin-bottom: 30px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .quick-start-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .quick-start-section h2 {
+            color: #1e3c72;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .quick-start-section .info {
+            color: #5a6c7d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        
+        .agent-selection {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .agent-selection label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .agent-selection input[type="radio"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .quick-start-btn {
+            background: #1e3c72;
+            color: white;
+            font-size: 16px;
+            padding: 14px 32px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(42, 82, 152, 0.3);
+        }
+        
+        .quick-start-btn:hover {
+            background: #2a5298;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+        }
+        
+        .quick-start-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Status indicator colors */
+        .step-number.pending {
+            background: #6c757d;
+        }
+        
+        .step-number.doing {
+            background: #ffa500;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .step-number.done {
+            background: #28a745;
+        }
+        
+        .step-number.error {
+            background: #dc3545;
+        }
+        
+        /* Step status styling */
+        .step.done {
+            border-left-color: #28a745;
+            box-shadow: 0 2px 15px rgba(40, 167, 69, 0.15);
+        }
+        
+        .step.done h2 {
+            color: #28a745;
+        }
+        
+        .step.done button {
+            background: #28a745;
+        }
+        
+        .step.done button:hover {
+            background: #218838;
+        }
+        
+        .step.done::after {
+            content: "✓";
+            position: absolute;
+            right: 30px;
+            top: 30px;
+            width: 40px;
+            height: 40px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+        
+        .step {
+            position: relative;
+        }
+        
+        .step.doing {
+            border-left-color: #ffa500;
+        }
+        
+        .step.error {
+            border-left-color: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
     </style>
 </head>
 <body>
@@ -661,44 +865,51 @@ function getWizardHtml(): string {
                     <h1>Bluetext Setup Wizard</h1>
                     <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
                 </div>
+
+                <div class="quick-start-section">
+                    <h2>🚀 Quick Start</h2>
+                    <p class="info">Run all setup steps automatically in sequence:</p>
+                    <div class="agent-selection">
+                        <label>
+                            <input type="radio" name="agent" value="cline" checked> Configure Cline
+                        </label>
+                        <label>
+                            <input type="radio" name="agent" value="claude"> Configure Claude Code
+                        </label>
+                    </div>
+                    <button class="quick-start-btn" onclick="startQuickSetup()">▶ Run Quick Start</button>
+                </div>
                 
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <h2>Initialize Git Repository</h2>
+                <div class="step" data-step="1">
+                    <span class="step-number" id="step-1">1</span>
+                    <h2 id="step-1-title" data-original="Initialize Git Repository" data-completed="Git Initialized">Initialize Git Repository</h2>
                     <p class="info">Initialize a git repository in your project directory (recommended)</p>
-                    <button onclick="runCommand('initGit')">Initialize Git</button>
+                    <button id="step-1-button" data-original="Initialize Git" data-completed="Git Initialized" onclick="runCommand('initGit')">Initialize Git</button>
                 </div>
 
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <h2>Create polytope.yml</h2>
+                <div class="step" data-step="2">
+                    <span class="step-number" id="step-2">2</span>
+                    <h2 id="step-2-title" data-original="Create polytope.yml" data-completed="polytope.yml Created">Create polytope.yml</h2>
                     <p class="info">Create the main Polytope configuration file that includes Bluetext tools</p>
                     <div class="code">include:
   - repo: gh:bluetext-io/bluetext</div>
-                    <button onclick="runCommand('createPolytopeYml')">Create polytope.yml</button>
+                    <button id="step-2-button" data-original="Create polytope.yml" data-completed="polytope.yml Created" onclick="runCommand('createPolytopeYml')">Create polytope.yml</button>
                 </div>
 
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <h2>Configure Coding Agent</h2>
+                <div class="step" data-step="3">
+                    <span class="step-number" id="step-3">3</span>
+                    <h2 id="step-3-title" data-original="Configure Coding Agent" data-completed="Coding Agent Configured">Configure Coding Agent</h2>
                     <p class="info">Choose your preferred coding agent to configure:</p>
-                    <button onclick="runCommand('configureCline')">Configure Cline</button>
-                    <button onclick="runCommand('configureClaudeCode')">Configure Claude Code</button>
+                    <button id="step-3-button-cline" data-original="Configure Cline" data-completed="Cline Configured" onclick="runCommand('configureCline')">Configure Cline</button>
+                    <button id="step-3-button-claude" data-original="Configure Claude Code" data-completed="Claude Code Configured" onclick="runCommand('configureClaudeCode')">Configure Claude Code</button>
                 </div>
 
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <h2>Start MCP Server</h2>
+                <div class="step" data-step="4">
+                    <span class="step-number" id="step-4">4</span>
+                    <h2 id="step-4-title" data-original="Start MCP Server" data-completed="MCP Server Started">Start MCP Server</h2>
                     <p class="info">Start the Polytope MCP server on http://localhost:31338</p>
                     <div class="code">pt run --mcp</div>
-                    <button onclick="runCommand('startMCP')">Start MCP Server</button>
-                </div>
-
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <h2>Flight Check</h2>
-                    <p class="info">Verify that everything is configured correctly</p>
-                    <button onclick="runCommand('flightCheck')">Run Flight Check</button>
+                    <button id="step-4-button" data-original="Start MCP Server" data-completed="MCP Server Started" onclick="runCommand('startMCP')">Start MCP Server</button>
                 </div>
 
                 <div class="docs-section">
@@ -763,6 +974,66 @@ function getWizardHtml(): string {
             output.scrollTop = output.scrollHeight;
         }
 
+        // Quick Start function
+        function startQuickSetup() {
+            const agentChoice = document.querySelector('input[name="agent"]:checked').value;
+            vscode.postMessage({ 
+                command: 'quickStart',
+                agentChoice: agentChoice
+            });
+        }
+        
+        // Update step status
+        function updateStepStatus(stepNumber, status) {
+            const stepElement = document.getElementById('step-' + stepNumber);
+            const stepContainer = document.querySelector('.step[data-step="' + stepNumber + '"]');
+            const stepTitle = document.getElementById('step-' + stepNumber + '-title');
+            
+            if (stepElement) {
+                // Remove all status classes from step number
+                stepElement.classList.remove('pending', 'doing', 'done', 'error');
+                // Add new status class to step number
+                stepElement.classList.add(status);
+            }
+            
+            if (stepContainer) {
+                // Remove all status classes from step container
+                stepContainer.classList.remove('pending', 'doing', 'done', 'error');
+                // Add new status class to step container
+                stepContainer.classList.add(status);
+            }
+            
+            if (stepTitle) {
+                // Update title text based on status
+                if (status === 'done') {
+                    stepTitle.textContent = stepTitle.getAttribute('data-completed');
+                } else {
+                    stepTitle.textContent = stepTitle.getAttribute('data-original');
+                }
+            }
+            
+            // Update button text based on status
+            const updateButtonText = (buttonId) => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    if (status === 'done') {
+                        button.textContent = button.getAttribute('data-completed');
+                    } else {
+                        button.textContent = button.getAttribute('data-original');
+                    }
+                }
+            };
+            
+            // Update button(s) for the step
+            if (stepNumber === 3) {
+                // Step 3 has two buttons
+                updateButtonText('step-3-button-cline');
+                updateButtonText('step-3-button-claude');
+            } else {
+                updateButtonText('step-' + stepNumber + '-button');
+            }
+        }
+        
         // Handle messages from the extension
         window.addEventListener('message', event => {
             const message = event.data;
@@ -773,164 +1044,12 @@ function getWizardHtml(): string {
                 case 'clearTerminal':
                     clearTerminalOutput();
                     break;
+                case 'updateStepStatus':
+                    updateStepStatus(message.stepNumber, message.status);
+                    break;
             }
         });
     </script>
-</body>
-</html>`;
-}
-
-function getFlightCheckHtml(checks: any[]): string {
-    const checkItems = checks.map(check => `
-        <div class="check-item ${check.passed ? 'passed' : 'warning'}">
-            <div class="status-indicator ${check.passed ? 'success' : 'fail'}"></div>
-            <div class="check-details">
-                <strong>${check.name}</strong>
-                <p>${check.passed ? 'Passed' : 'Needs Attention'}</p>
-            </div>
-        </div>
-    `).join('');
-
-    const allPassed = checks.every(c => c.passed);
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flight Check</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            padding: 0;
-            background: #1e3c72;
-            background-image: 
-                linear-gradient(rgba(42, 82, 152, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(42, 82, 152, 0.03) 1px, transparent 1px),
-                linear-gradient(rgba(42, 82, 152, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(42, 82, 152, 0.02) 1px, transparent 1px),
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.02) 35px, rgba(255, 255, 255, 0.02) 70px);
-            background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px, 100px 100px;
-            background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px, 0 0;
-            min-height: 100vh;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 40px 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #1e3c72;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            letter-spacing: -0.5px;
-        }
-        .summary {
-            padding: 25px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 18px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-        }
-        .summary.success {
-            background: #1e3c72;
-            color: white;
-        }
-        .summary.warning {
-            background: white;
-            color: #1e3c72;
-            border: 2px solid #2a5298;
-        }
-        .check-item {
-            display: flex;
-            align-items: center;
-            padding: 20px;
-            margin: 15px 0;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .check-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        .status-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 20px;
-            flex-shrink: 0;
-        }
-        .status-indicator.success {
-            background: #2a5298;
-            box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.2);
-        }
-        .status-indicator.fail {
-            background: #e8eaed;
-            border: 2px solid #d1d5db;
-        }
-        .check-details {
-            flex: 1;
-        }
-        .check-details strong {
-            display: block;
-            color: #1e3c72;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        .check-details p {
-            color: #5a6c7d;
-            font-size: 14px;
-        }
-        .footer-message {
-            background: white;
-            padding: 25px;
-            margin-top: 30px;
-            border-radius: 10px;
-            text-align: center;
-            color: #5a6c7d;
-            font-size: 15px;
-            line-height: 1.6;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Flight Check</h1>
-        </div>
-        
-        <div class="summary ${allPassed ? 'success' : 'warning'}">
-            ${allPassed ? 'All checks passed! You\'re ready to go!' : 'Some checks need attention'}
-        </div>
-
-        ${checkItems}
-
-        <div class="footer-message">
-            ${allPassed ? 
-                'You can now start prompting your coding agent to create projects using Bluetext tools!' : 
-                'Please complete the setup steps in the wizard to get started.'}
-        </div>
-    </div>
 </body>
 </html>`;
 }
