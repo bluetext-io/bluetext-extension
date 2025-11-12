@@ -4,13 +4,17 @@ A VSCode/VSCodium extension that provides a step-by-step wizard to set up Bluete
 
 ## Features
 
-### 🚀 Complete Setup Wizard
-Launch the interactive setup wizard that guides you through all configuration steps:
-- Initialize Git repository
+### Quick Start & Setup Wizard
+
+Get up and running in under 5 minutes with the interactive setup wizard:
+
+**Complete Setup Wizard** - Guides you through all configuration steps:
+- Initialize Git repository (optional but recommended)
 - Create polytope.yml configuration
 - Configure Cline or Claude Code MCP settings
 - Start the MCP server
-### 🛠️ Individual Commands
+
+**Individual Commands** - Run specific setup steps as needed:
 
 The extension provides individual commands for each setup step:
 

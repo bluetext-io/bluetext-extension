@@ -149,7 +149,6 @@ async function createPolytopeYml(skipPrompt: boolean = false): Promise<boolean> 
     try {
         fs.writeFileSync(polytopeYmlPath, polytopeContent, 'utf8');
         const successMsg = 'polytope.yml created successfully!';
-        vscode.window.showInformationMessage(successMsg);
         logToTerminal(successMsg, 'success');
         logToTerminal(`File location: ${polytopeYmlPath}`, 'info');
         
@@ -244,17 +243,6 @@ async function configureCline() {
         
         const successMsg = 'Cline MCP settings configured successfully!';
         logToTerminal(successMsg, 'success');
-        
-        vscode.window.showInformationMessage(
-            successMsg,
-            'Open Settings'
-        ).then(selection => {
-            if (selection === 'Open Settings') {
-                vscode.workspace.openTextDocument(clineSettingsPath).then(doc => {
-                    vscode.window.showTextDocument(doc);
-                });
-            }
-        });
     } catch (error) {
         const errorMsg = `Failed to configure Cline: ${error}`;
         vscode.window.showErrorMessage(errorMsg);
@@ -276,7 +264,6 @@ async function configureClaudeCode() {
     terminal.sendText(command);
     
     const msg = 'Claude Code MCP configuration command executed. Check the terminal for results.';
-    vscode.window.showInformationMessage(msg);
     logToTerminal(msg, 'success');
 }
 
@@ -296,7 +283,6 @@ async function initGit() {
     // Check if git is already initialized
     if (fs.existsSync(gitPath)) {
         const msg = 'Git repository already initialized';
-        vscode.window.showInformationMessage(msg);
         logToTerminal(msg, 'info');
         return;
     }
@@ -307,7 +293,6 @@ async function initGit() {
     terminal.sendText('git init');
     
     const successMsg = 'Git repository initialized!';
-    vscode.window.showInformationMessage(successMsg);
     logToTerminal(successMsg, 'success');
 }
 
@@ -348,7 +333,6 @@ async function startMCP() {
     terminal.sendText('pt run --mcp');
     
     const msg = 'MCP server starting... Check terminal for output. Server will run on http://localhost:31338';
-    vscode.window.showInformationMessage(msg);
     logToTerminal(msg, 'success');
 }
 
@@ -366,7 +350,7 @@ function updateStepStatus(stepNumber: number, status: 'pending' | 'doing' | 'don
 // Quick Start function that runs all steps in sequence
 async function runQuickStart(agentChoice: 'cline' | 'claude') {
     logToTerminal('='.repeat(50), 'info');
-    logToTerminal('🚀 Starting Quick Setup...', 'command');
+    logToTerminal('Starting Quick Setup...', 'command');
     logToTerminal('='.repeat(50), 'info');
     
     // Step 1: Initialize Git
@@ -425,7 +409,7 @@ async function runQuickStart(agentChoice: 'cline' | 'claude') {
     
     // Step 4: Start MCP Server
     updateStepStatus(4, 'doing');
-    logToTerminal('\n🚀 Step 4/4: Starting MCP server...', 'command');
+    logToTerminal('\n⚡ Step 4/4: Starting MCP server...', 'command');
     try {
         await startMCP();
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -483,202 +467,166 @@ function getWizardHtml(): string {
                 repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.02) 35px, rgba(255, 255, 255, 0.02) 70px);
             background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px, 100px 100px;
         }
-        .terminal-panel {
-            height: 40vh;
-            min-height: 200px;
-            max-height: 50vh;
-            border-top: 3px solid #2a5298;
-            display: flex;
-            flex-direction: column;
-            background: #1a1a1a;
-        }
-        .terminal-header {
-            background: #2a2a2a;
-            color: #e0e0e0;
-            padding: 10px 15px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .terminal-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .terminal-icon {
-            width: 16px;
-            height: 16px;
-            background: #4a9eff;
-            border-radius: 3px;
-        }
-        .terminal-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .terminal-btn {
-            background: transparent;
-            color: #b0b0b0;
-            border: 1px solid #4a4a4a;
-            padding: 4px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-        .terminal-btn:hover {
-            background: #3a3a3a;
-            color: #e0e0e0;
-            border-color: #5a5a5a;
-        }
-        .terminal-output {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #d4d4d4;
-            background: #1e1e1e;
-        }
-        .terminal-line {
-            margin-bottom: 8px;
-            display: flex;
-            gap: 10px;
-        }
-        .terminal-timestamp {
-            color: #808080;
-            flex-shrink: 0;
-        }
-        .terminal-message {
-            flex: 1;
-            word-wrap: break-word;
-        }
-        .terminal-info {
-            color: #4a9eff;
-        }
-        .terminal-success {
-            color: #4ec9b0;
-        }
-        .terminal-error {
-            color: #f48771;
-        }
-        .terminal-command {
-            color: #dcdcaa;
-            font-weight: 600;
-        }
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 20px;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-            padding: 40px 20px;
+        
+        /* Single unified card */
+        .unified-card {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
         }
+        
+        /* Header section - left aligned */
+        .header {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
         h1 {
             color: #1e3c72;
-            font-size: 36px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             letter-spacing: -0.5px;
+            text-align: left;
         }
+        
         .subtitle {
             color: #5a6c7d;
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1.6;
-            max-width: 600px;
-            margin: 0 auto;
+            text-align: left;
         }
+        
+        /* Progress line container */
+        .steps-container {
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        /* Vertical progress line */
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            left: 34.5px;
+            top: 20px;
+            bottom: 20px;
+            width: 3px;
+            background: linear-gradient(to bottom, 
+                var(--line-color-1, #f0f0f0) 0%, 
+                var(--line-color-1, #f0f0f0) 25%,
+                var(--line-color-2, #f0f0f0) 25%,
+                var(--line-color-2, #f0f0f0) 50%,
+                var(--line-color-3, #f0f0f0) 50%,
+                var(--line-color-3, #f0f0f0) 75%,
+                var(--line-color-4, #f0f0f0) 75%,
+                var(--line-color-4, #f0f0f0) 100%
+            );
+            border-radius: 2px;
+            z-index: 0;
+        }
+        
         .step {
-            background: white;
-            margin: 25px 0;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #2a5298;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
         }
-        .step:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        
+        .step:not(:last-child) {
+            margin-bottom: 4px;
+            padding-bottom: 12px;
+            position: relative;
         }
+        
+        .step-number-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
         .step-number {
-            display: inline-block;
-            width: 35px;
-            height: 35px;
-            background: #2a5298;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            background: #6c757d;
             color: white;
             border-radius: 50%;
-            text-align: center;
-            line-height: 35px;
             font-weight: 700;
-            font-size: 16px;
-            margin-right: 12px;
-            vertical-align: middle;
+            font-size: 14px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
         }
-        h2 {
-            color: #1e3c72;
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: inline-block;
-            vertical-align: middle;
+        
+        .step-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        .info {
-            color: #5a6c7d;
-            margin: 15px 0 20px 0;
-            line-height: 1.6;
-            font-size: 15px;
-        }
-        .code {
-            background: #f5f7fa;
-            border: 1px solid #e1e8ed;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            margin: 15px 0 20px 0;
+        
+        .step-text {
+            flex: 1;
             color: #1e3c72;
             font-size: 14px;
-            overflow-x: auto;
+            font-weight: 500;
+            line-height: 1.5;
         }
+        
+        .step-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
         button {
             background: #1e3c72;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 20px;
             cursor: pointer;
-            border-radius: 6px;
-            margin-right: 10px;
-            font-size: 15px;
+            border-radius: 5px;
+            font-size: 13px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(42, 82, 152, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25);
+            white-space: nowrap;
         }
         button:hover {
             background: #2a5298;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+            box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35);
         }
         button:active {
             transform: translateY(0);
         }
         .docs-section {
-            background: white;
-            margin-top: 40px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
         }
         .docs-section h2 {
             color: #1e3c72;
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
         }
         .docs-section ul {
             list-style: none;
@@ -706,75 +654,115 @@ function getWizardHtml(): string {
             color: #1e3c72;
             text-decoration: underline;
         }
-        
-        /* Quick Start Section */
-        .quick-start-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #2a5298;
-            margin-bottom: 30px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        /* Quick Start Header (outside card) */
+        .quick-start-header-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 20px;
         }
         
-        .quick-start-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        .quick-start-text {
+            flex: 1;
         }
         
-        .quick-start-section h2 {
+        .quick-start-title {
             color: #1e3c72;
             font-size: 24px;
-            margin-bottom: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
         
-        .quick-start-section .info {
+        .quick-start-subtitle {
             color: #5a6c7d;
-            margin-bottom: 20px;
+            font-size: 13px;
             line-height: 1.6;
+        }
+        
+        /* Agent Selection Card */
+        .agent-card {
+            background: #f3f4f5;
+            padding: 16px 20px;
+            border-radius: 6px;
+            border-left: 4px solid #2a5298;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .agent-card h3 {
+            color: #1e3c72;
             font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        /* Warning message for agent change */
+        .agent-warning {
+            display: none;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #856404;
+            line-height: 1.5;
+        }
+        
+        .agent-warning.show {
+            display: block;
+        }
+        
+        .agent-warning strong {
+            color: #664d03;
         }
         
         .agent-selection {
             display: flex;
             gap: 20px;
-            margin-bottom: 20px;
+            flex: 1;
         }
         
         .agent-selection label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 500;
             color: #333;
+            white-space: nowrap;
         }
         
         .agent-selection input[type="radio"] {
             cursor: pointer;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
         
         .quick-start-btn {
             background: #1e3c72;
             color: white;
-            font-size: 16px;
-            padding: 14px 32px;
-            font-weight: 700;
+            font-size: 13px;
+            padding: 8px 20px;
+            font-weight: 600;
             border: none;
             cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(42, 82, 152, 0.3);
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25);
+            white-space: nowrap;
         }
         
         .quick-start-btn:hover {
             background: #2a5298;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+            box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35);
         }
         
         .quick-start-btn:active {
@@ -789,6 +777,7 @@ function getWizardHtml(): string {
         .step-number.doing {
             background: #ffa500;
             animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
         }
         
         .step-number.done {
@@ -799,52 +788,66 @@ function getWizardHtml(): string {
             background: #dc3545;
         }
         
+        /* Progress line color updates based on step status */
+        .steps-container.step-1-pending {
+            --line-color-1: #f0f0f0;
+        }
+        .steps-container.step-1-doing {
+            --line-color-1: #ffa500;
+        }
+        .steps-container.step-1-done {
+            --line-color-1: #28a745;
+        }
+        .steps-container.step-1-error {
+            --line-color-1: #dc3545;
+        }
+        
+        .steps-container.step-2-pending {
+            --line-color-2: #f0f0f0;
+        }
+        .steps-container.step-2-doing {
+            --line-color-2: #ffa500;
+        }
+        .steps-container.step-2-done {
+            --line-color-2: #28a745;
+        }
+        .steps-container.step-2-error {
+            --line-color-2: #dc3545;
+        }
+        
+        .steps-container.step-3-pending {
+            --line-color-3: #f0f0f0;
+        }
+        .steps-container.step-3-doing {
+            --line-color-3: #ffa500;
+        }
+        .steps-container.step-3-done {
+            --line-color-3: #28a745;
+        }
+        .steps-container.step-3-error {
+            --line-color-3: #dc3545;
+        }
+        
+        .steps-container.step-4-pending {
+            --line-color-4: #f0f0f0;
+        }
+        .steps-container.step-4-doing {
+            --line-color-4: #ffa500;
+        }
+        .steps-container.step-4-done {
+            --line-color-4: #28a745;
+        }
+        .steps-container.step-4-error {
+            --line-color-4: #dc3545;
+        }
+        
         /* Step status styling */
-        .step.done {
-            border-left-color: #28a745;
-            box-shadow: 0 2px 15px rgba(40, 167, 69, 0.15);
-        }
-        
-        .step.done h2 {
-            color: #28a745;
-        }
-        
         .step.done button {
             background: #28a745;
         }
         
         .step.done button:hover {
             background: #218838;
-        }
-        
-        .step.done::after {
-            content: "✓";
-            position: absolute;
-            right: 30px;
-            top: 30px;
-            width: 40px;
-            height: 40px;
-            background: #28a745;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-        }
-        
-        .step {
-            position: relative;
-        }
-        
-        .step.doing {
-            border-left-color: #ffa500;
-        }
-        
-        .step.error {
-            border-left-color: #dc3545;
         }
         
         @keyframes pulse {
@@ -861,133 +864,227 @@ function getWizardHtml(): string {
     <div class="main-layout">
         <div class="wizard-panel">
             <div class="container">
-                <div class="header">
-                    <h1>Bluetext Setup Wizard</h1>
-                    <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
-                </div>
-
-                <div class="quick-start-section">
-                    <h2>🚀 Quick Start</h2>
-                    <p class="info">Run all setup steps automatically in sequence:</p>
-                    <div class="agent-selection">
-                        <label>
-                            <input type="radio" name="agent" value="cline" checked> Configure Cline
-                        </label>
-                        <label>
-                            <input type="radio" name="agent" value="claude"> Configure Claude Code
-                        </label>
+                <div class="unified-card">
+                    <div class="header">
+                        <h1>Bluetext Setup Wizard</h1>
+                        <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
                     </div>
-                    <button class="quick-start-btn" onclick="startQuickSetup()">▶ Run Quick Start</button>
-                </div>
-                
-                <div class="step" data-step="1">
-                    <span class="step-number" id="step-1">1</span>
-                    <h2 id="step-1-title" data-original="Initialize Git Repository" data-completed="Git Initialized">Initialize Git Repository</h2>
-                    <p class="info">Initialize a git repository in your project directory (recommended)</p>
-                    <button id="step-1-button" data-original="Initialize Git" data-completed="Git Initialized" onclick="runCommand('initGit')">Initialize Git</button>
-                </div>
 
-                <div class="step" data-step="2">
-                    <span class="step-number" id="step-2">2</span>
-                    <h2 id="step-2-title" data-original="Create polytope.yml" data-completed="polytope.yml Created">Create polytope.yml</h2>
-                    <p class="info">Create the main Polytope configuration file that includes Bluetext tools</p>
-                    <div class="code">include:
-  - repo: gh:bluetext-io/bluetext</div>
-                    <button id="step-2-button" data-original="Create polytope.yml" data-completed="polytope.yml Created" onclick="runCommand('createPolytopeYml')">Create polytope.yml</button>
-                </div>
+                    <div class="quick-start-header-section">
+                        <div class="quick-start-text">
+                            <h2 class="quick-start-title">Quick Start</h2>
+                            <p class="quick-start-subtitle">Runs the steps below</p>
+                        </div>
+                        <button class="quick-start-btn" onclick="startQuickSetup()">▶ Run Quick Start</button>
+                    </div>
 
-                <div class="step" data-step="3">
-                    <span class="step-number" id="step-3">3</span>
-                    <h2 id="step-3-title" data-original="Configure Coding Agent" data-completed="Coding Agent Configured">Configure Coding Agent</h2>
-                    <p class="info">Choose your preferred coding agent to configure:</p>
-                    <button id="step-3-button-cline" data-original="Configure Cline" data-completed="Cline Configured" onclick="runCommand('configureCline')">Configure Cline</button>
-                    <button id="step-3-button-claude" data-original="Configure Claude Code" data-completed="Claude Code Configured" onclick="runCommand('configureClaudeCode')">Configure Claude Code</button>
-                </div>
+                    <div class="agent-card">
+                        <h3>Select Agent</h3>
+                        <div class="agent-selection">
+                            <label>
+                                <input type="radio" name="agent" value="cline" checked> Cline
+                            </label>
+                            <label>
+                                <input type="radio" name="agent" value="claude"> Claude Code
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="agent-warning" id="agent-warning">
+                        <strong>⚠️ Agent selection changed!</strong> To apply the new configuration, click the "Configure Agent" button (Step 3) or re-run Quick Start.
+                    </div>
+                    
+                    <div class="steps-container" id="steps-container">
+                            <div class="step" data-step="1">
+                                <div class="step-number-wrapper">
+                                    <span class="step-number pending" id="step-1">1</span>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-1-title" data-original="Initialize git repository in your project" data-completed="Git repository initialized">Initialize git repository in your project</span>
+                                    <div class="step-actions">
+                                        <button id="step-1-button" data-original="Initialize" data-completed="✓ Done" onclick="runCommand('initGit')">Initialize</button>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="step" data-step="4">
-                    <span class="step-number" id="step-4">4</span>
-                    <h2 id="step-4-title" data-original="Start MCP Server" data-completed="MCP Server Started">Start MCP Server</h2>
-                    <p class="info">Start the Polytope MCP server on http://localhost:31338</p>
-                    <div class="code">pt run --mcp</div>
-                    <button id="step-4-button" data-original="Start MCP Server" data-completed="MCP Server Started" onclick="runCommand('startMCP')">Start MCP Server</button>
-                </div>
+                            <div class="step" data-step="2">
+                                <div class="step-number-wrapper">
+                                    <span class="step-number pending" id="step-2">2</span>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-2-title" data-original="Create polytope.yml configuration file" data-completed="polytope.yml created successfully">Create polytope.yml configuration file</span>
+                                    <div class="step-actions">
+                                        <button id="step-2-button" data-original="Create File" data-completed="✓ Done" onclick="runCommand('createPolytopeYml')">Create File</button>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="docs-section">
-                    <h2>Documentation</h2>
-                    <ul>
-                        <li><a href="https://polytope.dev/docs">Polytope Documentation</a></li>
-                        <li><a href="https://github.com/bluetext-io/bluetext">Bluetext Repository</a></li>
-                    </ul>
+                            <div class="step" data-step="3">
+                                <div class="step-number-wrapper">
+                                    <span class="step-number pending" id="step-3">3</span>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-3-title" data-original="Configure Agent" data-completed="Agent configured successfully">Configure Agent</span>
+                                    <div class="step-actions">
+                                        <button id="step-3-button" data-original-cline="Cline" data-original-claude="Claude" data-completed-cline="✓ Cline" data-completed-claude="✓ Claude" onclick="configureAgent()">Cline</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="step" data-step="4">
+                                <div class="step-number-wrapper">
+                                    <span class="step-number pending" id="step-4">4</span>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-4-title" data-original="Start MCP server on localhost:31338" data-completed="MCP server started successfully">Start MCP server on localhost:31338</span>
+                                    <div class="step-actions">
+                                        <button id="step-4-button" data-original="Start Server" data-completed="✓ Running" onclick="runCommand('startMCP')">Start Server</button>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="docs-section">
+                        <h2>Documentation</h2>
+                        <ul>
+                            <li><a href="https://docs.bluetext.io/what-is-bluetext">Bluetext Documentation</a></li>
+                            <li><a href="https://polytope.dev/docs">Polytope Documentation</a></li>
+                            <li><a href="https://github.com/bluetext-io/bluetext">Bluetext Repository</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="terminal-panel">
-            <div class="terminal-header">
-                <div class="terminal-title">
-                    <div class="terminal-icon"></div>
-                    <span>Terminal Output</span>
-                </div>
-                <div class="terminal-actions">
-                    <button class="terminal-btn" onclick="clearTerminalOutput()">Clear</button>
-                </div>
-            </div>
-            <div class="terminal-output" id="terminalOutput">
-                <div class="terminal-line">
-                    <span class="terminal-timestamp">--:--:--</span>
-                    <span class="terminal-message terminal-info">Terminal ready. Waiting for commands...</span>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
         const vscode = acquireVsCodeApi();
         
+        // Track configuration state for each agent separately
+        let clineConfigured = false;
+        let claudeConfigured = false;
+        let lastConfiguredAgent = null;
+        
         function runCommand(command) {
             vscode.postMessage({ command: command });
         }
 
-        function clearTerminalOutput() {
-            const output = document.getElementById('terminalOutput');
-            output.innerHTML = '<div class="terminal-line"><span class="terminal-timestamp">--:--:--</span><span class="terminal-message terminal-info">Terminal cleared.</span></div>';
-        }
-
-        function addTerminalLine(message, type, timestamp) {
-            const output = document.getElementById('terminalOutput');
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
+        // Configure Agent - dynamically calls the correct configuration based on radio selection
+        function configureAgent() {
+            const agentChoice = document.querySelector('input[name="agent"]:checked').value;
+            const agentWarning = document.getElementById('agent-warning');
             
-            const time = document.createElement('span');
-            time.className = 'terminal-timestamp';
-            time.textContent = timestamp;
+            // Update tracking variables
+            lastConfiguredAgent = agentChoice;
             
-            const msg = document.createElement('span');
-            msg.className = 'terminal-message terminal-' + type;
-            msg.textContent = message;
+            // Mark the agent as configured
+            if (agentChoice === 'cline') {
+                clineConfigured = true;
+            } else {
+                claudeConfigured = true;
+            }
             
-            line.appendChild(time);
-            line.appendChild(msg);
-            output.appendChild(line);
+            // Hide warning when user manually reconfigures
+            if (agentWarning) {
+                agentWarning.classList.remove('show');
+            }
             
-            // Auto-scroll to bottom
-            output.scrollTop = output.scrollHeight;
+            if (agentChoice === 'cline') {
+                vscode.postMessage({ command: 'configureCline' });
+            } else {
+                vscode.postMessage({ command: 'configureClaudeCode' });
+            }
         }
 
         // Quick Start function
         function startQuickSetup() {
             const agentChoice = document.querySelector('input[name="agent"]:checked').value;
+            const agentWarning = document.getElementById('agent-warning');
+            
+            // Update tracking variables
+            lastConfiguredAgent = agentChoice;
+            
+            // Hide warning when Quick Start runs
+            if (agentWarning) {
+                agentWarning.classList.remove('show');
+            }
+            
             vscode.postMessage({ 
                 command: 'quickStart',
                 agentChoice: agentChoice
             });
         }
         
+        // Update step 3 button text when agent selection changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const agentRadios = document.querySelectorAll('input[name="agent"]');
+            const step3Button = document.getElementById('step-3-button');
+            const agentWarning = document.getElementById('agent-warning');
+            
+            agentRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const selectedAgent = this.value;
+                    const agentName = selectedAgent === 'cline' ? 'Cline' : 'Claude';
+                    
+                    // Check if the selected agent has been configured
+                    const isConfigured = selectedAgent === 'cline' ? clineConfigured : claudeConfigured;
+                    
+                    // Update button text and step state based on agent configuration
+                    if (step3Button) {
+                        if (isConfigured) {
+                            step3Button.textContent = '✓ ' + agentName;
+                        } else {
+                            step3Button.textContent = agentName;
+                        }
+                    }
+                    
+                    // Update step 3 visual state
+                    const stepNumber = document.getElementById('step-3');
+                    const stepContainer = document.querySelector('.step[data-step="3"]');
+                    const stepsContainer = document.getElementById('steps-container');
+                    
+                    if (stepNumber) {
+                        stepNumber.classList.remove('pending', 'doing', 'done', 'error');
+                        stepNumber.classList.add(isConfigured ? 'done' : 'pending');
+                    }
+                    
+                    if (stepContainer) {
+                        stepContainer.classList.remove('pending', 'doing', 'done', 'error');
+                        stepContainer.classList.add(isConfigured ? 'done' : 'pending');
+                    }
+                    
+                    if (stepsContainer) {
+                        stepsContainer.classList.remove('step-3-pending', 'step-3-doing', 'step-3-done', 'step-3-error');
+                        stepsContainer.classList.add(isConfigured ? 'step-3-done' : 'step-3-pending');
+                    }
+                    
+                    // Show warning if switching to unconfigured agent
+                    if (agentWarning && !isConfigured && (clineConfigured || claudeConfigured)) {
+                        agentWarning.classList.add('show');
+                    } else if (agentWarning) {
+                        agentWarning.classList.remove('show');
+                    }
+                });
+            });
+        });
+        
         // Update step status
         function updateStepStatus(stepNumber, status) {
             const stepElement = document.getElementById('step-' + stepNumber);
             const stepContainer = document.querySelector('.step[data-step="' + stepNumber + '"]');
+            const stepsContainer = document.getElementById('steps-container');
             const stepTitle = document.getElementById('step-' + stepNumber + '-title');
+            
+            // Track when step 3 is completed and mark the configured agent
+            if (stepNumber === 3 && status === 'done') {
+                const agentChoice = document.querySelector('input[name="agent"]:checked').value;
+                if (agentChoice === 'cline') {
+                    clineConfigured = true;
+                } else {
+                    claudeConfigured = true;
+                }
+            }
             
             if (stepElement) {
                 // Remove all status classes from step number
@@ -1003,6 +1100,14 @@ function getWizardHtml(): string {
                 stepContainer.classList.add(status);
             }
             
+            // Update progress line color for this step
+            if (stepsContainer) {
+                // Remove previous status for this step
+                stepsContainer.classList.remove('step-' + stepNumber + '-pending', 'step-' + stepNumber + '-doing', 'step-' + stepNumber + '-done', 'step-' + stepNumber + '-error');
+                // Add new status
+                stepsContainer.classList.add('step-' + stepNumber + '-' + status);
+            }
+            
             if (stepTitle) {
                 // Update title text based on status
                 if (status === 'done') {
@@ -1013,8 +1118,21 @@ function getWizardHtml(): string {
             }
             
             // Update button text based on status
-            const updateButtonText = (buttonId) => {
-                const button = document.getElementById(buttonId);
+            if (stepNumber === 3) {
+                // Step 3 has a single button that changes based on agent selection
+                const button = document.getElementById('step-3-button');
+                const agentChoice = document.querySelector('input[name="agent"]:checked').value;
+                
+                if (button) {
+                    if (status === 'done') {
+                        button.textContent = button.getAttribute('data-completed-' + agentChoice);
+                    } else {
+                        button.textContent = button.getAttribute('data-original-' + agentChoice);
+                    }
+                }
+            } else {
+                // Other steps have standard single buttons
+                const button = document.getElementById('step-' + stepNumber + '-button');
                 if (button) {
                     if (status === 'done') {
                         button.textContent = button.getAttribute('data-completed');
@@ -1022,15 +1140,6 @@ function getWizardHtml(): string {
                         button.textContent = button.getAttribute('data-original');
                     }
                 }
-            };
-            
-            // Update button(s) for the step
-            if (stepNumber === 3) {
-                // Step 3 has two buttons
-                updateButtonText('step-3-button-cline');
-                updateButtonText('step-3-button-claude');
-            } else {
-                updateButtonText('step-' + stepNumber + '-button');
             }
         }
         
@@ -1038,12 +1147,6 @@ function getWizardHtml(): string {
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.command) {
-                case 'terminalOutput':
-                    addTerminalLine(message.message, message.type, message.timestamp);
-                    break;
-                case 'clearTerminal':
-                    clearTerminalOutput();
-                    break;
                 case 'updateStepStatus':
                     updateStepStatus(message.stepNumber, message.status);
                     break;

@@ -137,4 +137,4 @@ include:
 
 You're now ready to build amazing applications with Bluetext and Polytope!
 
-Happy coding! 🚀
+Happy coding!
