@@ -511,28 +511,6 @@ function getWizardHtml(): string {
             padding-left: 20px;
         }
         
-        /* Vertical progress line */
-        .steps-container::before {
-            content: '';
-            position: absolute;
-            left: 34.5px;
-            top: 20px;
-            bottom: 20px;
-            width: 3px;
-            background: linear-gradient(to bottom, 
-                var(--line-color-1, #f0f0f0) 0%, 
-                var(--line-color-1, #f0f0f0) 25%,
-                var(--line-color-2, #f0f0f0) 25%,
-                var(--line-color-2, #f0f0f0) 50%,
-                var(--line-color-3, #f0f0f0) 50%,
-                var(--line-color-3, #f0f0f0) 75%,
-                var(--line-color-4, #f0f0f0) 75%,
-                var(--line-color-4, #f0f0f0) 100%
-            );
-            border-radius: 2px;
-            z-index: 0;
-        }
-        
         .step {
             padding: 8px 0;
             display: flex;
@@ -546,6 +524,33 @@ function getWizardHtml(): string {
             margin-bottom: 4px;
             padding-bottom: 12px;
             position: relative;
+        }
+        
+        /* Individual line segments between circles */
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 14.5px;
+            top: 44px;
+            height: calc(100% - 36px);
+            width: 3px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            z-index: 0;
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Line colors based on step status */
+        .step[data-step="1"]::after {
+            background: var(--line-color-1, #f0f0f0);
+        }
+        
+        .step[data-step="2"]::after {
+            background: var(--line-color-2, #f0f0f0);
+        }
+        
+        .step[data-step="3"]::after {
+            background: var(--line-color-3, #f0f0f0);
         }
         
         .step-number-wrapper {
