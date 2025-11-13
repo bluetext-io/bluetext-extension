@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetext Setup Wizard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1e3c72;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-layout { display: flex; flex-direction: column; height: 100vh; }
+        .wizard-panel {
+            flex: 1;
+            overflow-y: auto;
+            background: #1e3c72;
+            background-image: 
+                linear-gradient(rgba(42, 82, 152, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42, 82, 152, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(42, 82, 152, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42, 82, 152, 0.02) 1px, transparent 1px),
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.02) 35px, rgba(255, 255, 255, 0.02) 70px);
+            background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px, 100px 100px;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .unified-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); margin-bottom: 20px; }
+        .header { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 2px solid #f0f0f0; }
+        .header-clickable {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease;
+            padding: 4px 0;
+            margin: -4px 0;
+            border-radius: 4px;
+        }
+        .header-clickable:hover { background-color: rgba(42, 82, 152, 0.02); }
+        .header-title-section { flex: 1; }
+        h1 { color: #1e3c72; font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; text-align: left; }
+        .subtitle { color: #5a6c7d; font-size: 13px; line-height: 1.6; text-align: left; }
+        .card-content { max-height: 5000px; overflow: hidden; transition: max-height 0.3s ease; }
+        .card-content.collapsed { max-height: 0; }
+        .header-arrow { flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; opacity: 0.6; }
+        .header-arrow.collapsed { transform: rotate(-90deg); }
+        .steps-container { position: relative; padding-left: 20px; }
+        .step { padding: 8px 0; display: flex; align-items: center; gap: 20px; position: relative; z-index: 1; }
+        .step:not(:last-child) { margin-bottom: 4px; padding-bottom: 12px; position: relative; }
+        .step:not(:last-child)::after { content: ''; position: absolute; left: 14.5px; top: 44px; height: calc(100% - 36px); width: 3px; background: #d0d1d2; border-radius: 2px; z-index: 0; transition: background-color 0.3s ease; }
+        .step[data-step="1"]::after { background: var(--line-color-1, #d0d1d2); }
+        .step[data-step="2"]::after { background: var(--line-color-2, #d0d1d2); }
+        .step[data-step="3"]::after { background: var(--line-color-3, #d0d1d2); }
+        .step-number-wrapper { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .step-number { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; background: #6c757d; color: white; border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: all 0.3s ease; }
+        .step-content { flex: 1; display: flex; align-items: center; gap: 15px; }
+        .step-text { flex: 1; color: #1e3c72; font-size: 14px; font-weight: 500; line-height: 1.5; }
+        .step-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        button { background: #1e3c72; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; font-size: 13px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25); white-space: nowrap; }
+        button:hover { background: #2a5298; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35); }
+        button:active { transform: translateY(0); }
+        .docs-section { margin-top: 25px; padding-top: 25px; border-top: 2px solid #f0f0f0; }
+        .docs-section h2 { color: #1e3c72; font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+        .docs-section ul { list-style: none; padding: 0; }
+        .docs-section li { margin: 12px 0; padding-left: 25px; position: relative; }
+        .docs-section li:before { content: "→"; position: absolute; left: 0; color: #2a5298; font-weight: bold; }
+        .docs-section a { color: #2a5298; text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+        .docs-section a:hover { color: #1e3c72; text-decoration: underline; }
+        .quick-start-header-section { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; gap: 20px; }
+        .quick-start-text { flex: 1; }
+        .quick-start-title { color: #1e3c72; font-size: 24px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.5px; }
+        .quick-start-subtitle { color: #5a6c7d; font-size: 13px; line-height: 1.6; }
+        .agent-card { background: #f3f4f5; padding: 16px 20px; border-radius: 6px; border-left: 4px solid #2a5298; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; }
+        .agent-card h3 { color: #1e3c72; font-size: 15px; font-weight: 600; margin: 0; white-space: nowrap; }
+        .agent-warning { display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #856404; line-height: 1.5; }
+        .agent-warning.show { display: block; }
+        .agent-warning strong { color: #664d03; }
+        .agent-selection { display: flex; gap: 20px; flex: 1; }
+        .agent-selection label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; white-space: nowrap; }
+        .agent-selection input[type="radio"] { cursor: pointer; width: 16px; height: 16px; }
+        .quick-start-btn { background: #1e3c72; color: white; font-size: 13px; padding: 8px 20px; font-weight: 600; border: none; cursor: pointer; border-radius: 5px; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25); white-space: nowrap; }
+        .quick-start-btn:hover { background: #2a5298; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35); }
+        .quick-start-btn:active { transform: translateY(0); }
+        .step-number.pending { background: #6c757d; }
+        .step-number.doing { background: #ffa500; animation: pulse 1.5s ease-in-out infinite; box-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
+        .step-number.done { background: #28a745; }
+        .step-number.error { background: #dc3545; }
+        .steps-container.step-1-pending { --line-color-1: #d0d1d2; }
+        .steps-container.step-1-doing { --line-color-1: #ffa500; }
+        .steps-container.step-1-done { --line-color-1: #28a745; }
+        .steps-container.step-1-error { --line-color-1: #dc3545; }
+        .steps-container.step-2-pending { --line-color-2: #f0f0f0; }
+        .steps-container.step-2-doing { --line-color-2: #ffa500; }
+        .steps-container.step-2-done { --line-color-2: #28a745; }
+        .steps-container.step-2-error { --line-color-2: #dc3545; }
+        .steps-container.step-3-pending { --line-color-3: #f0f0f0; }
+        .steps-container.step-3-doing { --line-color-3: #ffa500; }
+        .steps-container.step-3-done { --line-color-3: #28a745; }
+        .steps-container.step-3-error { --line-color-3: #dc3545; }
+        .steps-container.step-4-pending { --line-color-4: #f0f0f0; }
+        .steps-container.step-4-doing { --line-color-4: #ffa500; }
+        .steps-container.step-4-done { --line-color-4: #28a745; }
+        .steps-container.step-4-error { --line-color-4: #dc3545; }
+        .step.done button {  background: #28a745; }
+        .step.done button:hover { background: #218838; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <div class="wizard-panel">
+            <div class="container">
+                <div class="unified-card">
+                    <div class="header">
+                        <div class="header-clickable" onclick="toggleHeader('main-header')">
+                            <div class="header-title-section">
+                                <h1>Bluetext Setup Wizard</h1>
+                                <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
+                            </div>
+                            <div class="header-arrow" id="main-header-arrow">
+                                <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-content" id="main-header-content">
+                        <div class="quick-start-header-section">
+                            <div class="quick-start-text">
+                                <h2 class="quick-start-title">Quick Start</h2>
+                                <p class="quick-start-subtitle">Runs the steps below</p>
+                            </div>
+                            <button class="quick-start-btn" onclick="startQuickSetup()">▶ Run Quick Start</button>
+                        </div>
+                        <div class="agent-card">
+                            <h3>Select Agent</h3>
+                            <div class="agent-selection">
+                                <label><input type="radio" name="agent" value="cline" checked> Cline</label>
+                                <label><input type="radio" name="agent" value="claude"> Claude Code</label>
+                            </div>
+                        </div>
+                        <div class="agent-warning" id="agent-warning">
+                            <strong>⚠️ Agent selection changed!</strong> To apply the new configuration, click the "Configure Agent" button (Step 3) or re-run Quick Start.
+                        </div>
+                        <div class="steps-container" id="steps-container">
+                            <div class="step" data-step="1">
+                                <div class="step-number-wrapper"><span class="step-number pending" id="step-1">1</span></div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-1-title" data-original="Initialize git repository in your project" data-completed="Git repository initialized">Initialize git repository in your project</span>
+                                    <div class="step-actions"><button id="step-1-button" data-original="Initialize" data-completed="✓ Done" onclick="runCommand('initGit')">Initialize</button></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="2">
+                                <div class="step-number-wrapper"><span class="step-number pending" id="step-2">2</span></div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-2-title" data-original="Create polytope.yml configuration file" data-completed="polytope.yml created successfully">Create polytope.yml configuration file</span>
+                                    <div class="step-actions"><button id="step-2-button" data-original="Create File" data-completed="✓ Done" onclick="runCommand('createPolytopeYml')">Create File</button></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="3">
+                                <div class="step-number-wrapper"><span class="step-number pending" id="step-3">3</span></div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-3-title" data-original="Configure Agent" data-completed="Agent configured successfully">Configure Agent</span>
+                                    <div class="step-actions"><button id="step-3-button" data-original-cline="Cline" data-original-claude="Claude" data-completed-cline="✓ Cline" data-completed-claude="✓ Claude" onclick="configureAgent()">Cline</button></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="4">
+                                <div class="step-number-wrapper"><span class="step-number pending" id="step-4">4</span></div>
+                                <div class="step-content">
+                                    <span class="step-text" id="step-4-title" data-original="Start MCP server on localhost:31338" data-completed="MCP server started successfully">Start MCP server on localhost:31338</span>
+                                    <div class="step-actions"><button id="step-4-button" data-original="Start Server" data-completed="✓ Running" onclick="runCommand('startMCP')">Start Server</button></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="docs-section">
+                            <h2>Documentation</h2>
+                            <ul>
+                                <li><a href="https://docs.bluetext.io/what-is-bluetext">Bluetext Documentation</a></li>
+                                <li><a href="https://polytope.dev/docs">Polytope Documentation</a></li>
+                                <li><a href="https://github.com/bluetext-io/bluetext">Bluetext Repository</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="unified-card" id="tools-card" style="display: none;">
+                    <div class="header">
+                        <div class="header-clickable" onclick="toggleHeader('tools-header')">
+                            <div class="header-title-section">
+                                <h1>🔧 Bluetext Tools</h1>
+                                <p class="subtitle">Available MCP tools from your Bluetext server</p>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <button onclick="refreshTools(); event.stopPropagation();" style="padding: 8px 16px;">🔄 Refresh</button>
+                                <div class="header-arrow" id="tools-header-arrow">
+                                    <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-content" id="tools-header-content">
+                        <div id="tools-loading" style="text-align: center; padding: 20px; color: #6c757d;"><p>Loading tools...</p></div>
+                        <div id="tools-error" style="display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 16px; margin-bottom: 15px; color: #856404;">
+                            <strong>⚠️ Could not connect to MCP server</strong>
+                            <p style="margin: 8px 0 0 0;">Make sure the MCP server is running (Step 4). Click "Refresh" to try again.</p>
+                        </div>
+                        <div id="tools-list" style="display: none;"></div>
+                        <div id="tools-empty" style="display: none; text-align: center; padding: 20px; color: #6c757d;"><p>No tools available yet. Complete the quick start to see available tools.</p></div>
+                    </div>
+                </div>
+                <div class="unified-card" id="console-card">
+                    <div class="header">
+                        <div class="header-clickable" onclick="toggleHeader('console-header')">
+                            <div class="header-title-section">
+                                <h1>🖥️ Debug Console</h1>
+                                <p class="subtitle">Server communication logs</p>
+                            </div>
+                            <div class="header-arrow" id="console-header-arrow">
+                                <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-content" id="console-header-content">
+                        <div id="console-output" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6;">
+                            <div style="color: #6c757d; font-style: italic;">Console output will appear here...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="wizard.js"></script>
+</body>
+</html>

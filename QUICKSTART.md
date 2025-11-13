@@ -47,19 +47,8 @@ vsce package
    - **Step 2**: Create `polytope.yml` 
    - **Step 3**: Configure Cline or Claude Code
    - **Step 4**: Start the MCP server
-   - **Step 5**: Run flight check
 
-## Step 3: Verify Your Setup
-
-After completing the wizard, run the flight check:
-
-```
-Command Palette -> Bluetext: Run Flight Check
-```
-
-You should see all green checkmarks! ✅
-
-## Step 4: Start Building
+## Step 3: Start Building
 
 Now you're ready to use Bluetext tools with your coding agent!
 
@@ -99,7 +88,6 @@ pt call add-postgres
 | `Bluetext: Create polytope.yml` | Create config file only |
 | `Bluetext: Configure Cline` | Configure Cline MCP settings |
 | `Bluetext: Start MCP Server` | Start the MCP server |
-| `Bluetext: Run Flight Check` | Verify your setup |
 
 ## What's Running?
 
@@ -130,7 +118,6 @@ netstat -ano | findstr :31338  # Windows
 1. Ensure MCP server is running
 2. Check Cline MCP settings are configured
 3. Restart VSCode/VSCodium
-4. Run flight check to verify
 
 ### polytope.yml Issues
 Make sure the file contains:
@@ -150,4 +137,4 @@ include:
 
 You're now ready to build amazing applications with Bluetext and Polytope!
 
-Happy coding! 🚀
+Happy coding!

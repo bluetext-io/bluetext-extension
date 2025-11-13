@@ -12,7 +12,6 @@ The Bluetext Setup Assistant provides an interactive wizard that automates:
 2. **polytope.yml Creation** - Creates the main configuration file with Bluetext tools
 3. **MCP Configuration** - Automatically configures Cline or Claude Code to connect to the MCP server
 4. **MCP Server Management** - Provides easy commands to start the Polytope MCP server
-5. **Setup Verification** - Flight check system to verify everything is working correctly
 
 ## Features
 
@@ -29,7 +28,6 @@ Each setup step is available as a standalone command:
 - `Bluetext: Configure Claude Code MCP` - Setup Claude Code
 - `Bluetext: Initialize Git Repository` - Initialize git
 - `Bluetext: Start MCP Server` - Start the server
-- `Bluetext: Run Flight Check` - Verify setup
 
 ### Cross-Platform Support
 - Works on macOS, Windows, and Linux
@@ -99,12 +97,6 @@ Adds polytope MCP server configuration:
 }
 ```
 
-### Flight Check System
-Verifies:
-- Workspace folder is open ✅
-- polytope.yml exists ✅
-- Git repository initialized ⚠️ (optional)
-- Cline MCP settings configured ⚠️
 
 ## Usage Flow
 
@@ -112,8 +104,7 @@ Verifies:
 2. Runs "Bluetext: Complete Setup Wizard"
 3. Interactive wizard guides through each step
 4. Each step provides visual feedback
-5. Flight check verifies setup
-6. User can start building with Bluetext tools
+5. User can start building with Bluetext tools
 
 ## Benefits
 
