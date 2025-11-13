@@ -1,2 +1,9 @@
 include:
   - repo: gh:bluetext-io/bluetext
+  - modules/frontend
+  - modules/api
+tools:
+  default:
+    run:
+      - tool: "frontend"
+      - tool: "api"

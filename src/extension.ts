@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as http from 'http';
 
 // Global panel reference for terminal output
 let wizardPanel: vscode.WebviewPanel | undefined;
@@ -86,6 +87,12 @@ async function setupWizard() {
                     break;
                 case 'clearTerminal':
                     // Already handled via global command
+                    break;
+                case 'fetchMcpTools':
+                    await fetchMcpTools();
+                    break;
+                case 'runMcpTool':
+                    await executeMcpTool(message.toolName, message.toolSchema);
                     break;
             }
         },
@@ -347,6 +354,231 @@ function updateStepStatus(stepNumber: number, status: 'pending' | 'doing' | 'don
     }
 }
 
+// Function to fetch available MCP tools
+async function fetchMcpTools() {
+    const config = vscode.workspace.getConfiguration('bluetext');
+    const mcpPort = config.get<number>('mcpPort', 31338);
+    
+    logToTerminal(`🔍 Fetching tools from MCP server...`, 'info');
+
+    return new Promise<void>((resolve, reject) => {
+        const options = {
+            hostname: '127.0.0.1',
+            port: mcpPort,
+            path: '/mcp',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        };
+
+        logToTerminal(`Connecting to 127.0.0.1:${mcpPort}/mcp`, 'info');
+
+        const req = http.request(options, (res) => {
+            logToTerminal(`✓ Connected! Status: ${res.statusCode}`, 'success');
+            
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+                logToTerminal(`Received ${chunk.length} bytes...`, 'info');
+            });
+
+            res.on('end', () => {
+                logToTerminal(`✓ Response complete (${data.length} bytes total)`, 'success');
+                
+                try {
+                    // Parse the single-line JSON response
+                    const response = JSON.parse(data.trim());
+                    
+                    // Extract tools from the MCP response structure
+                    const tools = response?.result?.tools || [];
+                    
+                    if (tools.length > 0) {
+                        logToTerminal(`✓ Found ${tools.length} tools`, 'success');
+                        
+                        // Log first few tool names for verification
+                        const toolNames = tools.slice(0, 3).map((t: any) => t.name).join(', ');
+                        logToTerminal(`Tools: ${toolNames}${tools.length > 3 ? '...' : ''}`, 'info');
+                    } else {
+                        logToTerminal(`⚠️  No tools found in response`, 'info');
+                        logToTerminal(`Response keys: ${JSON.stringify(Object.keys(response))}`, 'info');
+                    }
+
+                    // Send tools to webview
+                    if (wizardPanel) {
+                        wizardPanel.webview.postMessage({
+                            command: 'updateTools',
+                            tools: tools
+                        });
+                    }
+
+                    resolve();
+                } catch (error) {
+                    const errorMsg = `Failed to parse response: ${error}`;
+                    logToTerminal(errorMsg, 'error');
+                    logToTerminal(`Raw data (first 500 chars): ${data.substring(0, 500)}`, 'error');
+                    
+                    if (wizardPanel) {
+                        wizardPanel.webview.postMessage({
+                            command: 'updateTools',
+                            tools: [],
+                            error: String(error)
+                        });
+                    }
+                    
+                    reject(error);
+                }
+            });
+
+            res.on('error', (error) => {
+                logToTerminal(`Response stream error: ${error.message}`, 'error');
+                
+                if (wizardPanel) {
+                    wizardPanel.webview.postMessage({
+                        command: 'updateTools',
+                        tools: [],
+                        error: error.message
+                    });
+                }
+                
+                reject(error);
+            });
+        });
+
+        req.on('error', (error) => {
+            logToTerminal(`❌ Request error: ${error.message}`, 'error');
+            logToTerminal(`Error code: ${(error as any).code}`, 'error');
+            logToTerminal(`Error type: ${error.name}`, 'error');
+            logToTerminal('💡 Make sure MCP server is running at 127.0.0.1:31338', 'info');
+            
+            if (wizardPanel) {
+                wizardPanel.webview.postMessage({
+                    command: 'updateTools',
+                    tools: [],
+                    error: `${error.name}: ${error.message}`
+                });
+            }
+            
+            reject(error);
+        });
+
+        req.on('timeout', () => {
+            logToTerminal(`❌ Request timed out`, 'error');
+            req.destroy();
+            
+            if (wizardPanel) {
+                wizardPanel.webview.postMessage({
+                    command: 'updateTools',
+                    tools: [],
+                    error: 'Request timed out'
+                });
+            }
+            
+            reject(new Error('Request timed out'));
+        });
+
+        // Set request timeout
+        req.setTimeout(10000);
+
+        // Send the tools/list request
+        const body = JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'tools/list',
+            params: {}
+        });
+
+        logToTerminal(`📤 Sending request: ${body}`, 'info');
+        
+        try {
+            req.write(body);
+            req.end();
+            logToTerminal(`✓ Request sent, waiting for response...`, 'info');
+        } catch (error) {
+            logToTerminal(`❌ Failed to send request: ${error}`, 'error');
+            reject(error);
+        }
+    });
+}
+
+// Function to execute an MCP tool
+async function executeMcpTool(toolName: string, toolSchema: any) {
+    const config = vscode.workspace.getConfiguration('bluetext');
+    const mcpPort = config.get<number>('mcpPort', 31338);
+    
+    logToTerminal(`▶ Running tool: ${toolName}`, 'command');
+    
+    // For now, run tools with empty arguments
+    // TODO: Add parameter input UI for tools that require parameters
+    const args = {};
+    
+    return new Promise<void>((resolve, reject) => {
+        const options = {
+            hostname: '127.0.0.1',
+            port: mcpPort,
+            path: '/mcp',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        };
+
+        const req = http.request(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(data.trim());
+                    
+                    if (response.error) {
+                        logToTerminal(`❌ Tool execution failed: ${response.error.message}`, 'error');
+                        reject(new Error(response.error.message));
+                    } else {
+                        logToTerminal(`✅ Tool executed successfully!`, 'success');
+                        
+                        // Log the result
+                        if (response.result) {
+                            const resultStr = JSON.stringify(response.result, null, 2);
+                            logToTerminal(`Result: ${resultStr}`, 'info');
+                        }
+                        
+                        resolve();
+                    }
+                } catch (error) {
+                    logToTerminal(`Failed to parse tool response: ${error}`, 'error');
+                    reject(error);
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            logToTerminal(`❌ Tool execution error: ${error.message}`, 'error');
+            reject(error);
+        });
+
+        // Send the tools/call request
+        const body = JSON.stringify({
+            jsonrpc: '2.0',
+            id: 2,
+            method: 'tools/call',
+            params: {
+                name: toolName,
+                arguments: args
+            }
+        });
+
+        req.write(body);
+        req.end();
+    });
+}
+
 // Quick Start function that runs all steps in sequence
 async function runQuickStart(agentChoice: 'cline' | 'claude') {
     logToTerminal('='.repeat(50), 'info');
@@ -426,6 +658,18 @@ async function runQuickStart(agentChoice: 'cline' | 'claude') {
     logToTerminal('✅ Quick Setup Complete!', 'success');
     logToTerminal('='.repeat(50), 'info');
     logToTerminal('\nYou can now start using Bluetext tools with your coding agent!', 'info');
+    
+    // Wait a bit for MCP server to initialize, then fetch tools
+    logToTerminal('\n⌛ Waiting for MCP server to initialize...', 'info');
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+    
+    logToTerminal('🔍 Fetching available tools...', 'info');
+    try {
+        await fetchMcpTools();
+        logToTerminal('✅ Tools loaded successfully!', 'success');
+    } catch (error) {
+        logToTerminal('⚠️  Could not fetch tools yet. Click "Refresh Tools" button once server is ready.', 'info');
+    }
 }
 
 function getWizardHtml(): string {
@@ -961,6 +1205,52 @@ function getWizardHtml(): string {
                         </ul>
                     </div>
                 </div>
+
+                <!-- Bluetext Tools Card -->
+                <div class="unified-card" id="tools-card" style="display: none;">
+                    <div class="header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h1>🔧 Bluetext Tools</h1>
+                                <p class="subtitle">Available MCP tools from your Bluetext server</p>
+                            </div>
+                            <button onclick="refreshTools()" style="padding: 8px 16px;">🔄 Refresh</button>
+                        </div>
+                    </div>
+
+                    <div id="tools-loading" style="text-align: center; padding: 20px; color: #6c757d;">
+                        <p>Loading tools...</p>
+                    </div>
+
+                    <div id="tools-error" style="display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 16px; margin-bottom: 15px; color: #856404;">
+                        <strong>⚠️ Could not connect to MCP server</strong>
+                        <p style="margin: 8px 0 0 0;">Make sure the MCP server is  running (Step 4). Click "Refresh" to try again.</p>
+                    </div>
+
+                    <div id="tools-list" style="display: none;">
+                        <!-- Tools will be dynamically populated here -->
+                    </div>
+
+                    <div id="tools-empty" style="display: none; text-align: center; padding: 20px; color: #6c757d;">
+                        <p>No tools available yet. Complete the quick start to see available tools.</p>
+                    </div>
+                </div>
+
+                <!-- Debug Console Card -->
+                <div class="unified-card" id="console-card">
+                    <div class="header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h1>🖥️ Debug Console</h1>
+                                <p class="subtitle">Server communication logs</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="console-output" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6;">
+                        <div style="color: #6c757d; font-style: italic;">Console output will appear here...</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -973,6 +1263,25 @@ function getWizardHtml(): string {
         let clineConfigured = false;
         let claudeConfigured = false;
         let lastConfiguredAgent = null;
+        
+        // Store tools data globally
+        let availableTools = [];
+        
+        // Function to run a tool
+        function runTool(toolIndex) {
+            const tool = availableTools[toolIndex];
+            if (!tool) {
+                console.error('Tool not found:', toolIndex);
+                return;
+            }
+            
+            // Send message to extension to run the tool
+            vscode.postMessage({
+                command: 'runMcpTool',
+                toolName: tool.name,
+                toolSchema: tool.inputSchema
+            });
+        }
         
         function runCommand(command) {
             vscode.postMessage({ command: command });
@@ -1151,12 +1460,135 @@ function getWizardHtml(): string {
             }
         }
         
+        // Refresh tools function
+        function refreshTools() {
+            vscode.postMessage({ command: 'fetchMcpTools' });
+            
+            // Show loading state
+            const toolsCard = document.getElementById('tools-card');
+            const toolsLoading = document.getElementById('tools-loading');
+            const toolsError = document.getElementById('tools-error');
+            const toolsList = document.getElementById('tools-list');
+            const toolsEmpty = document.getElementById('tools-empty');
+            
+            if (toolsCard) toolsCard.style.display = 'block';
+            if (toolsLoading) toolsLoading.style.display = 'block';
+            if (toolsError) toolsError.style.display = 'none';
+            if (toolsList) toolsList.style.display = 'none';
+            if (toolsEmpty) toolsEmpty.style.display = 'none';
+        }
+        
+        // Update tools display
+        function updateTools(tools, error) {
+            const toolsCard = document.getElementById('tools-card');
+            const toolsLoading = document.getElementById('tools-loading');
+            const toolsError = document.getElementById('tools-error');
+            const toolsList = document.getElementById('tools-list');
+            const toolsEmpty = document.getElementById('tools-empty');
+            
+            // Show the tools card
+            if (toolsCard) toolsCard.style.display = 'block';
+            if (toolsLoading) toolsLoading.style.display = 'none';
+            
+            if (error) {
+                // Show error state
+                if (toolsError) toolsError.style.display = 'block';
+                if (toolsList) toolsList.style.display = 'none';
+                if (toolsEmpty) toolsEmpty.style.display = 'none';
+                return;
+            }
+            
+            if (!tools || tools.length === 0) {
+                // Show empty state
+                if (toolsError) toolsError.style.display = 'none';
+                if (toolsList) toolsList.style.display = 'none';
+                if (toolsEmpty) toolsEmpty.style.display = 'block';
+                return;
+            }
+            
+            // Store tools globally for access
+            availableTools = tools;
+            
+            // Show tools list
+            if (toolsError) toolsError.style.display = 'none';
+            if (toolsEmpty) toolsEmpty.style.display = 'none';
+            if (toolsList) {
+                toolsList.style.display = 'block';
+                
+                // Build the tools HTML
+                let html = '<div style="display: grid; gap: 12px;">';
+                
+                tools.forEach((tool, index) => {
+                    html += \`
+                        <div style="background: #f8f9fa; border-left: 4px solid #2a5298; padding: 16px; border-radius: 4px;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <div style="background: #2a5298; color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;">
+                                    🔧
+                                </div>
+                                <div style="flex: 1;">
+                                    <h3 style="font-size: 16px; font-weight: 600; color: #1e3c72; margin: 0 0 8px 0;">\${escapeHtml(tool.name)}</h3>
+                                    <p style="font-size: 13px; color: #5a6c7d; margin: 0 0 12px 0; line-height: 1.5;">\${escapeHtml(tool.description || 'No description available')}</p>
+                                    <button onclick="runTool(\${index})" style="background: #28a745; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.25);">
+                                        ▶ Run Tool
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                });
+                
+                html += '</div>';
+                html += \`<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; text-align: center; color: #6c757d; font-size: 13px;">Total: \${tools.length} tool\${tools.length !== 1 ? 's' : ''}</div>\`;
+                
+                toolsList.innerHTML = html;
+            }
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Handle console output
+        function addConsoleMessage(message, type, timestamp) {
+            const console = document.getElementById('console-output');
+            if (!console) return;
+            
+            // Clear placeholder on first message
+            if (console.querySelector('[style*="italic"]')) {
+                console.innerHTML = '';
+            }
+            
+            const colors = {
+                info: '#d4d4d4',
+                success: '#4ec9b0',
+                error: '#f48771',
+                command: '#dcdcaa'
+            };
+            
+            const line = document.createElement('div');
+            line.style.color = colors[type] || colors.info;
+            line.style.marginBottom = '4px';
+            line.innerHTML = \`<span style="color: #6c757d;">[\${timestamp}]</span> \${message}\`;
+            
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
         // Handle messages from the extension
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.command) {
                 case 'updateStepStatus':
                     updateStepStatus(message.stepNumber, message.status);
+                    break;
+                case 'updateTools':
+                    updateTools(message.tools, message.error);
+                    break;
+                case 'terminalOutput':
+                    addConsoleMessage(message.message, message.type, message.timestamp);
                     break;
             }
         });
