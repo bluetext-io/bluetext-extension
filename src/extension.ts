@@ -85,9 +85,6 @@ async function setupWizard() {
                 case 'quickStart':
                     await runQuickStart(message.agentChoice);
                     break;
-                case 'clearTerminal':
-                    // Already handled via global command
-                    break;
                 case 'fetchMcpTools':
                     await fetchMcpTools();
                     break;
@@ -736,6 +733,26 @@ function getWizardHtml(): string {
             border-bottom: 2px solid #f0f0f0;
         }
         
+        .header-clickable {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease;
+            padding: 4px 0;
+            margin: -4px 0;
+            border-radius: 4px;
+        }
+        
+        .header-clickable:hover {
+            background-color: rgba(42, 82, 152, 0.02);
+        }
+        
+        .header-title-section {
+            flex: 1;
+        }
+        
         h1 {
             color: #1e3c72;
             font-size: 24px;
@@ -750,6 +767,30 @@ function getWizardHtml(): string {
             font-size: 13px;
             line-height: 1.6;
             text-align: left;
+        }
+        
+        /* Collapsible card content */
+        .card-content {
+            max-height: 5000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .card-content.collapsed {
+            max-height: 0;
+        }
+        
+        .header-arrow {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+            opacity: 0.6;
+        }
+        
+        .header-arrow.collapsed {
+            transform: rotate(-90deg);
         }
         
         /* Progress line container */
@@ -1118,10 +1159,20 @@ function getWizardHtml(): string {
             <div class="container">
                 <div class="unified-card">
                     <div class="header">
-                        <h1>Bluetext Setup Wizard</h1>
-                        <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
+                        <div class="header-clickable" onclick="toggleHeader('main-header')">
+                            <div class="header-title-section">
+                                <h1>Bluetext Setup Wizard</h1>
+                                <p class="subtitle">This wizard will guide you through setting up Bluetext with Polytope for MCP server integration.</p>
+                            </div>
+                            <div class="header-arrow" id="main-header-arrow">
+                                <svg width="16" height="16" viewBox="0 0 16 16">
+                                    <path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
+                    <div class="card-content" id="main-header-content">
                     <div class="quick-start-header-section">
                         <div class="quick-start-text">
                             <h2 class="quick-start-title">Quick Start</h2>
@@ -1204,20 +1255,29 @@ function getWizardHtml(): string {
                             <li><a href="https://github.com/bluetext-io/bluetext">Bluetext Repository</a></li>
                         </ul>
                     </div>
+                    </div>
                 </div>
 
                 <!-- Bluetext Tools Card -->
                 <div class="unified-card" id="tools-card" style="display: none;">
                     <div class="header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                        <div class="header-clickable" onclick="toggleHeader('tools-header')">
+                            <div class="header-title-section">
                                 <h1>🔧 Bluetext Tools</h1>
                                 <p class="subtitle">Available MCP tools from your Bluetext server</p>
                             </div>
-                            <button onclick="refreshTools()" style="padding: 8px 16px;">🔄 Refresh</button>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <button onclick="refreshTools(); event.stopPropagation();" style="padding: 8px 16px;">🔄 Refresh</button>
+                                <div class="header-arrow" id="tools-header-arrow">
+                                    <svg width="16" height="16" viewBox="0 0 16 16">
+                                        <path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
+                    <div class="card-content" id="tools-header-content">
                     <div id="tools-loading" style="text-align: center; padding: 20px; color: #6c757d;">
                         <p>Loading tools...</p>
                     </div>
@@ -1234,21 +1294,29 @@ function getWizardHtml(): string {
                     <div id="tools-empty" style="display: none; text-align: center; padding: 20px; color: #6c757d;">
                         <p>No tools available yet. Complete the quick start to see available tools.</p>
                     </div>
+                    </div>
                 </div>
 
                 <!-- Debug Console Card -->
                 <div class="unified-card" id="console-card">
                     <div class="header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                        <div class="header-clickable" onclick="toggleHeader('console-header')">
+                            <div class="header-title-section">
                                 <h1>🖥️ Debug Console</h1>
                                 <p class="subtitle">Server communication logs</p>
+                            </div>
+                            <div class="header-arrow" id="console-header-arrow">
+                                <svg width="16" height="16" viewBox="0 0 16 16">
+                                    <path d="M3 6 L8 11 L13 6" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                             </div>
                         </div>
                     </div>
 
+                    <div class="card-content" id="console-header-content">
                     <div id="console-output" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6;">
                         <div style="color: #6c757d; font-style: italic;">Console output will appear here...</div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1262,11 +1330,21 @@ function getWizardHtml(): string {
         // Track configuration state for each agent separately
         let clineConfigured = false;
         let claudeConfigured = false;
-        let lastConfiguredAgent = null;
         
         // Store tools data globally
         let availableTools = [];
         let executedTools = new Set(); // Track which tools have been executed
+        
+        // Function to toggle header collapse
+        function toggleHeader(headerId) {
+            const content = document.getElementById(headerId + '-content');
+            const arrow = document.getElementById(headerId + '-arrow');
+            
+            if (content && arrow) {
+                content.classList.toggle('collapsed');
+                arrow.classList.toggle('collapsed');
+            }
+        }
         
         // Function to toggle tool description
         function toggleTool(event, toolIndex) {
@@ -1324,9 +1402,6 @@ function getWizardHtml(): string {
             const agentChoice = document.querySelector('input[name="agent"]:checked').value;
             const agentWarning = document.getElementById('agent-warning');
             
-            // Update tracking variables
-            lastConfiguredAgent = agentChoice;
-            
             // Mark the agent as configured
             if (agentChoice === 'cline') {
                 clineConfigured = true;
@@ -1350,9 +1425,6 @@ function getWizardHtml(): string {
         function startQuickSetup() {
             const agentChoice = document.querySelector('input[name="agent"]:checked').value;
             const agentWarning = document.getElementById('agent-warning');
-            
-            // Update tracking variables
-            lastConfiguredAgent = agentChoice;
             
             // Hide warning when Quick Start runs
             if (agentWarning) {
