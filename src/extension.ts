@@ -1266,6 +1266,30 @@ function getWizardHtml(): string {
         
         // Store tools data globally
         let availableTools = [];
+        let executedTools = new Set(); // Track which tools have been executed
+        
+        // Function to toggle tool description
+        function toggleTool(event, toolIndex) {
+            const toolHeader = event.currentTarget;
+            const toolItem = toolHeader.parentElement;
+            const description = toolItem.querySelector('.tool-description');
+            const icon = toolHeader.querySelector('.expand-icon');
+            
+            // Toggle expanded state
+            const isExpanded = description.style.maxHeight && description.style.maxHeight !== '0px';
+            
+            if (isExpanded) {
+                // Collapse
+                description.style.maxHeight = '0';
+                description.style.padding = '0 16px';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Expand
+                description.style.maxHeight = description.scrollHeight + 'px';
+                description.style.padding = '0 16px';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
         
         // Function to run a tool
         function runTool(toolIndex) {
@@ -1273,6 +1297,14 @@ function getWizardHtml(): string {
             if (!tool) {
                 console.error('Tool not found:', toolIndex);
                 return;
+            }
+            
+            // Mark tool as executed and update button color
+            executedTools.add(toolIndex);
+            const button = document.querySelector(\`[data-tool-index="\${toolIndex}"]\`);
+            if (button) {
+                button.style.background = '#28a745';
+                button.style.boxShadow = '0 2px 4px rgba(40, 167, 69, 0.25)';
             }
             
             // Send message to extension to run the tool
@@ -1519,19 +1551,29 @@ function getWizardHtml(): string {
                 let html = '<div style="display: grid; gap: 12px;">';
                 
                 tools.forEach((tool, index) => {
+                    // Check if tool has been executed
+                    const isExecuted = executedTools.has(index);
+                    const buttonBg = isExecuted ? '#28a745' : '#1e3c72';
+                    const buttonShadow = isExecuted ? '0 2px 4px rgba(40, 167, 69, 0.25)' : '0 2px 6px rgba(42, 82, 152, 0.25)';
+                    
                     html += \`
-                        <div style="background: #f8f9fa; border-left: 4px solid #2a5298; padding: 16px; border-radius: 4px;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
+                        <div class="tool-item" style="background: #f3f4f5; border-left: 4px solid #2a5298; border-radius: 4px; overflow: hidden;">
+                            <div class="tool-header" onclick="toggleTool(event, \${index})" style="display: flex; align-items: center; gap: 12px; padding: 16px; cursor: pointer; user-select: none; transition: background-color 0.15s ease;" onmouseenter="this.style.backgroundColor='rgba(42, 82, 152, 0.04)'" onmouseleave="this.style.backgroundColor='transparent'">
                                 <div style="background: #2a5298; color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;">
                                     🔧
                                 </div>
-                                <div style="flex: 1;">
-                                    <h3 style="font-size: 16px; font-weight: 600; color: #1e3c72; margin: 0 0 8px 0;">\${escapeHtml(tool.name)}</h3>
-                                    <p style="font-size: 13px; color: #5a6c7d; margin: 0 0 12px 0; line-height: 1.5;">\${escapeHtml(tool.description || 'No description available')}</p>
-                                    <button onclick="runTool(\${index})" style="background: #28a745; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.25);">
-                                        ▶ Run Tool
-                                    </button>
+                                <div style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                                    <h3 style="font-size: 16px; font-weight: 600; color: #1e3c72; margin: 0;">\${escapeHtml(tool.name)}</h3>
+                                    <svg class="expand-icon" width="12" height="12" viewBox="0 0 12 12" style="transition: transform 0.2s ease; opacity: 0.6; flex-shrink: 0;">
+                                        <path d="M2 4 L6 8 L10 4" fill="none" stroke="#2a5298" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
                                 </div>
+                                <button data-tool-index="\${index}" onclick="runTool(\${index}); event.stopPropagation();" style="background: \${buttonBg}; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: \${buttonShadow}; transition: all 0.2s ease;">
+                                    ▶ Run
+                                </button>
+                            </div>
+                            <div class="tool-description" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; padding: 0 16px;">
+                                <p style="font-size: 13px; color: #5a6c7d; margin: 0; line-height: 1.5; padding-bottom: 16px; border-top: 1px solid #e0e0e0; padding-top: 12px;">\${escapeHtml(tool.description || 'No description available')}</p>
                             </div>
                         </div>
                     \`;
