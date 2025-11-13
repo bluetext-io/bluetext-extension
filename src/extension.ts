@@ -368,6 +368,7 @@ async function runQuickStart(agentChoice: 'cline' | 'claude') {
             }
         }
         updateStepStatus(1, 'done');
+        await new Promise(resolve => setTimeout(resolve, 700)); // Pause before next step
     } catch (error) {
         logToTerminal(`Git initialization failed: ${error}`, 'error');
         updateStepStatus(1, 'error');
@@ -381,6 +382,7 @@ async function runQuickStart(agentChoice: 'cline' | 'claude') {
         await new Promise(resolve => setTimeout(resolve, 500));
         if (success) {
             updateStepStatus(2, 'done');
+            await new Promise(resolve => setTimeout(resolve, 700)); // Pause before next step
         } else {
             updateStepStatus(2, 'error');
             return; // Stop if this critical step fails
@@ -402,6 +404,7 @@ async function runQuickStart(agentChoice: 'cline' | 'claude') {
         }
         await new Promise(resolve => setTimeout(resolve, 500));
         updateStepStatus(3, 'done');
+        await new Promise(resolve => setTimeout(resolve, 700)); // Pause before next step
     } catch (error) {
         logToTerminal(`Agent configuration failed: ${error}`, 'error');
         updateStepStatus(3, 'error');
@@ -534,7 +537,7 @@ function getWizardHtml(): string {
             top: 44px;
             height: calc(100% - 36px);
             width: 3px;
-            background: #f0f0f0;
+            background: #d0d1d2;
             border-radius: 2px;
             z-index: 0;
             transition: background-color 0.3s ease;
@@ -542,15 +545,15 @@ function getWizardHtml(): string {
         
         /* Line colors based on step status */
         .step[data-step="1"]::after {
-            background: var(--line-color-1, #f0f0f0);
+            background: var(--line-color-1, #d0d1d2);
         }
         
         .step[data-step="2"]::after {
-            background: var(--line-color-2, #f0f0f0);
+            background: var(--line-color-2, #d0d1d2);
         }
         
         .step[data-step="3"]::after {
-            background: var(--line-color-3, #f0f0f0);
+            background: var(--line-color-3, #d0d1d2);
         }
         
         .step-number-wrapper {
@@ -795,7 +798,7 @@ function getWizardHtml(): string {
         
         /* Progress line color updates based on step status */
         .steps-container.step-1-pending {
-            --line-color-1: #f0f0f0;
+            --line-color-1: #d0d1d2;
         }
         .steps-container.step-1-doing {
             --line-color-1: #ffa500;
