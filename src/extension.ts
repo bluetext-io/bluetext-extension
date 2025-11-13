@@ -6,6 +6,13 @@ import { McpService } from './mcpService';
 export function activate(context: vscode.ExtensionContext) {
     console.log('Bluetext Setup Assistant is now active');
 
+    // Register command to open wizard from toolbar button
+    context.subscriptions.push(
+        vscode.commands.registerCommand('bluetext.openFromActivityBar', () => {
+            vscode.commands.executeCommand('bluetext.setupWizard');
+        })
+    );
+
     // Register setup wizard command
     context.subscriptions.push(
         vscode.commands.registerCommand('bluetext.setupWizard', () => {
@@ -38,7 +45,9 @@ export function activate(context: vscode.ExtensionContext) {
                                 await new Promise(resolve => setTimeout(resolve, 1000));
                                 panel.updateStepStatus(4, 'done');
                                 // Start health monitoring after server starts
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                // Wait longer (7 seconds) to give server time to fully initialize
+                                panel.logToTerminal('Waiting for MCP server to fully initialize...', 'info');
+                                await new Promise(resolve => setTimeout(resolve, 7000));
                                 McpService.getInstance().startHealthMonitoring();
                                 break;
                             case 'quickStart':

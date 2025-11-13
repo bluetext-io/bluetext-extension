@@ -20,17 +20,16 @@
     "wizard"
   ],
   "activationEvents": [
-    "onCommand:bluetext.setupWizard",
-    "onCommand:bluetext.createPolytopeYml",
-    "onCommand:bluetext.configureCline",
-    "onCommand:bluetext.configureClaudeCode",
-    "onCommand:bluetext.initGit",
-    "onCommand:bluetext.startMCP",
-    "onCommand:bluetext.clearTerminal"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "bluetext.openFromActivityBar",
+        "title": "Open Bluetext Setup Wizard",
+        "icon": "resources/icon-b.svg"
+      },
       {
         "command": "bluetext.setupWizard",
         "title": "Bluetext: Complete Setup Wizard",
@@ -68,9 +67,22 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "bluetext.openFromActivityBar",
+          "when": "false"
+        }
+      ],
       "explorer/context": [
         {
           "command": "bluetext.setupWizard",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "bluetext.openFromActivityBar",
+          "when": "view == workbench.explorer.fileView",
           "group": "navigation"
         }
       ]

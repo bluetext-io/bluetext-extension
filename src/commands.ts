@@ -308,7 +308,9 @@ export async function runQuickStart(agentChoice: 'cline' | 'claude'): Promise<vo
         panel.updateStepStatus(4, 'done');
         
         // Start health monitoring after server starts
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s for server to fully start
+        // Wait longer (7 seconds) to give server time to fully initialize before first health check
+        panel.logToTerminal('Waiting for MCP server to fully initialize...', 'info');
+        await new Promise(resolve => setTimeout(resolve, 7000));
         McpService.getInstance().startHealthMonitoring();
     } catch (error) {
         panel.logToTerminal(`Failed to start MCP server: ${error}`, 'error');
