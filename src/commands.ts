@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { WizardPanel } from './wizardPanel';
+import { McpService } from './mcpService';
 
 export async function createPolytopeYml(skipPrompt: boolean = false): Promise<boolean> {
     const panel = WizardPanel.getInstance();
@@ -305,6 +306,10 @@ export async function runQuickStart(agentChoice: 'cline' | 'claude'): Promise<vo
         await startMCP();
         await new Promise(resolve => setTimeout(resolve, 1000));
         panel.updateStepStatus(4, 'done');
+        
+        // Start health monitoring after server starts
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s for server to fully start
+        McpService.getInstance().startHealthMonitoring();
     } catch (error) {
         panel.logToTerminal(`Failed to start MCP server: ${error}`, 'error');
         panel.updateStepStatus(4, 'error');

@@ -33,7 +33,13 @@ export function activate(context: vscode.ExtensionContext) {
                                 await commands.configureClaudeCode();
                                 break;
                             case 'startMCP':
+                                panel.updateStepStatus(4, 'doing');
                                 await commands.startMCP();
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                                panel.updateStepStatus(4, 'done');
+                                // Start health monitoring after server starts
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                McpService.getInstance().startHealthMonitoring();
                                 break;
                             case 'quickStart':
                                 await commands.runQuickStart(message.agentChoice);
@@ -71,4 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 }
 
-export function deactivate() {}
+export function deactivate() {
+    // Stop health monitoring when extension deactivates
+    McpService.getInstance().stopHealthMonitoring();
+}

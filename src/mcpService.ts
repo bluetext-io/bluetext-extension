@@ -4,6 +4,8 @@ import { WizardPanel } from './wizardPanel';
 
 export class McpService {
     private static instance: McpService;
+    private healthCheckInterval: NodeJS.Timeout | undefined;
+    private isMonitoring: boolean = false;
 
     private constructor() {}
 
@@ -12,6 +14,111 @@ export class McpService {
             McpService.instance = new McpService();
         }
         return McpService.instance;
+    }
+
+    public startHealthMonitoring(): void {
+        if (this.isMonitoring) {
+            return; // Already monitoring
+        }
+
+        this.isMonitoring = true;
+        const panel = WizardPanel.getInstance();
+        
+        panel.logToTerminal('🔍 Starting MCP server health monitoring...', 'info');
+
+        // Check immediately
+        this.checkServerHealth();
+
+        // Then check every 2 seconds for near-instant detection
+        this.healthCheckInterval = setInterval(() => {
+            this.checkServerHealth();
+        }, 2000);
+    }
+
+    public stopHealthMonitoring(): void {
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+            this.healthCheckInterval = undefined;
+        }
+        this.isMonitoring = false;
+        
+        const panel = WizardPanel.getInstance();
+        panel.logToTerminal('🛑 Stopped MCP server health monitoring', 'info');
+    }
+
+    private async checkServerHealth(): Promise<void> {
+        const config = vscode.workspace.getConfiguration('bluetext');
+        const mcpPort = config.get<number>('mcpPort', 31338);
+        const panel = WizardPanel.getInstance();
+
+        return new Promise<void>((resolve) => {
+            const options = {
+                hostname: '127.0.0.1',
+                port: mcpPort,
+                path: '/mcp',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+
+            const req = http.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => { data += chunk; });
+                res.on('end', () => {
+                    // Server responded, it's alive
+                    resolve();
+                });
+                res.on('error', () => {
+                    // Server connection failed
+                    this.handleServerDown();
+                    resolve();
+                });
+            });
+
+            req.on('error', () => {
+                // Server is down
+                this.handleServerDown();
+                resolve();
+            });
+
+            req.on('timeout', () => {
+                req.destroy();
+                this.handleServerDown();
+                resolve();
+            });
+
+            req.setTimeout(5000); // 5 second timeout for health checks
+
+            const body = JSON.stringify({
+                jsonrpc: '2.0',
+                id: 999,
+                method: 'tools/list',
+                params: {}
+            });
+
+            try {
+                req.write(body);
+                req.end();
+            } catch (error) {
+                this.handleServerDown();
+                resolve();
+            }
+        });
+    }
+
+    private handleServerDown(): void {
+        if (!this.isMonitoring) {
+            return; // Don't update if we stopped monitoring
+        }
+
+        const panel = WizardPanel.getInstance();
+        panel.logToTerminal('⚠️  MCP server is not responding - resetting step 4', 'error');
+        panel.updateStepStatus(4, 'pending');
+        
+        // Stop monitoring since server is down
+        this.stopHealthMonitoring();
     }
 
     public async fetchTools(): Promise<void> {
