@@ -166,6 +166,57 @@ export async function configureClaudeCode(): Promise<void> {
     panel.logToTerminal(msg, 'success');
 }
 
+export async function configureCopilot(): Promise<void> {
+    const panel = WizardPanel.getInstance();
+    panel.logToTerminal('Configuring Copilot MCP settings...', 'command');
+    
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+        const errorMsg = 'Please open a workspace folder first';
+        vscode.window.showErrorMessage(errorMsg);
+        panel.logToTerminal(errorMsg, 'error');
+        return;
+    }
+
+    const config = vscode.workspace.getConfiguration('bluetext');
+    const mcpPort = config.get<number>('mcpPort', 31338);
+
+    const vscodeDir = path.join(workspaceFolder.uri.fsPath, '.vscode');
+    const mcpJsonPath = path.join(vscodeDir, 'mcp.json');
+
+    panel.logToTerminal(`Settings path: ${mcpJsonPath}`, 'info');
+
+    try {
+        if (!fs.existsSync(vscodeDir)) {
+            panel.logToTerminal('Creating .vscode directory...', 'info');
+            fs.mkdirSync(vscodeDir, { recursive: true });
+        }
+
+        panel.logToTerminal(`Configuring polytope server at http://localhost:${mcpPort}/mcp`, 'info');
+
+        // Create formatted JSON with tools array on one line
+        const jsonContent = `{
+  "servers": {
+    "polytope": {
+      "type": "sse",
+      "url": "http://localhost:${mcpPort}/mcp",
+      "tools": ["*"]
+    }
+  }
+}`;
+
+        fs.writeFileSync(mcpJsonPath, jsonContent, 'utf8');
+        
+        const successMsg = 'Copilot MCP settings configured successfully!';
+        panel.logToTerminal(successMsg, 'success');
+        panel.logToTerminal(`File location: ${mcpJsonPath}`, 'info');
+    } catch (error) {
+        const errorMsg = `Failed to configure Copilot: ${error}`;
+        vscode.window.showErrorMessage(errorMsg);
+        panel.logToTerminal(errorMsg, 'error');
+    }
+}
+
 export async function initGit(): Promise<void> {
     const panel = WizardPanel.getInstance();
     panel.logToTerminal('Initializing Git repository...', 'command');
@@ -236,7 +287,7 @@ export async function startMCP(): Promise<void> {
     panel.logToTerminal(msg, 'success');
 }
 
-export async function runQuickStart(agentChoice: 'cline' | 'claude'): Promise<void> {
+export async function runQuickStart(agentChoice: 'cline' | 'claude' | 'copilot'): Promise<void> {
     const panel = WizardPanel.getInstance();
     panel.logToTerminal('='.repeat(50), 'info');
     panel.logToTerminal('Starting Quick Setup...', 'command');
@@ -284,12 +335,15 @@ export async function runQuickStart(agentChoice: 'cline' | 'claude'): Promise<vo
     
     // Step 3: Configure Agent
     panel.updateStepStatus(3, 'doing');
-    panel.logToTerminal(`\n⚙️  Step 3/4: Configuring ${agentChoice === 'cline' ? 'Cline' : 'Claude Code'}...`, 'command');
+    const agentName = agentChoice === 'cline' ? 'Cline' : agentChoice === 'claude' ? 'Claude Code' : 'Copilot';
+    panel.logToTerminal(`\n⚙️  Step 3/4: Configuring ${agentName}...`, 'command');
     try {
         if (agentChoice === 'cline') {
             await configureCline();
-        } else {
+        } else if (agentChoice === 'claude') {
             await configureClaudeCode();
+        } else {
+            await configureCopilot();
         }
         await new Promise(resolve => setTimeout(resolve, 500));
         panel.updateStepStatus(3, 'done');

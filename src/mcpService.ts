@@ -246,14 +246,20 @@ export class McpService {
         });
     }
 
-    public async executeTool(toolName: string, toolSchema: any): Promise<void> {
+    public async executeTool(toolName: string, toolSchema: any, parameters?: any): Promise<void> {
         const panel = WizardPanel.getInstance();
         const config = vscode.workspace.getConfiguration('bluetext');
         const mcpPort = config.get<number>('mcpPort', 31338);
         
         panel.logToTerminal(`▶ Running tool: ${toolName}`, 'command');
         
-        const args = {};
+        // Use provided parameters or empty object
+        const args = parameters || {};
+        
+        // Log parameters if they exist
+        if (parameters && Object.keys(parameters).length > 0) {
+            panel.logToTerminal(`Parameters: ${JSON.stringify(parameters, null, 2)}`, 'info');
+        }
         
         return new Promise<void>((resolve, reject) => {
             const options = {

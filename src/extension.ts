@@ -39,6 +39,9 @@ export function activate(context: vscode.ExtensionContext) {
                             case 'configureClaudeCode':
                                 await commands.configureClaudeCode();
                                 break;
+                            case 'configureCopilot':
+                                await commands.configureCopilot();
+                                break;
                             case 'startMCP':
                                 panel.updateStepStatus(4, 'doing');
                                 await commands.startMCP();
@@ -65,7 +68,11 @@ export function activate(context: vscode.ExtensionContext) {
                                 await McpService.getInstance().fetchTools();
                                 break;
                             case 'runMcpTool':
-                                await McpService.getInstance().executeTool(message.toolName, message.toolSchema);
+                                await McpService.getInstance().executeTool(
+                                    message.toolName, 
+                                    message.toolSchema,
+                                    message.parameters
+                                );
                                 break;
                         }
                     },
