@@ -501,7 +501,6 @@ function updateTools(tools, error) {
                 headerAction = `
                     <div class="tool-header-actions">
                         <div class="tool-info-badge">
-                            <div class="tool-info-icon">i</div>
                             <span>Expects parameters</span>
                         </div>
                         <button class="tool-run-button-disabled" style="padding: 6px 16px; font-size: 12px; border-radius: 4px; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px; border: none; color: white;"><svg width="12" height="13" viewBox="0 0 71.884262 76.735161" style="flex-shrink: 0;"><path style="fill:none;stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-linejoin:miter" d="m 12.259,2 c -4.05249,0.15214 -7.259192,3.48167 -7.258988,7.53701 v 25.65631 0.39946 25.65632 c -1.58e-4,5.79375 6.261243,9.42401 11.289233,6.54533 l 45.286075,-23.39342 a 10.1794,10.1794 89.96398 0 0 -0.0114,-18.09387 L 16.28924,2.99196 c -1.224231,-0.70098 -2.620523,-1.04455 -4.030245,-0.99167 z" /></svg>Run</button>
