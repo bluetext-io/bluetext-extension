@@ -61,34 +61,53 @@ function collectToolParams(toolIndex) {
     }
     
     const params = {};
+    const properties = schema.properties;
+    
+    // First, populate with all default values from the schema
+    Object.keys(properties).forEach(paramName => {
+        const param = properties[paramName];
+        if (param.default !== undefined) {
+            params[paramName] = param.default;
+        }
+    });
+    
+    // Then override with user input values if they exist
     const inputs = document.querySelectorAll(`[data-tool-params="${toolIndex}"] .tool-param-input`);
     
     inputs.forEach(input => {
         const paramName = input.getAttribute('data-param');
         const paramType = input.getAttribute('data-type');
         let value;
+        let hasValue = false;
         
         if (paramType === 'boolean') {
+            // For checkboxes, always use the checked state (even if false)
             value = input.checked;
+            hasValue = true;
         } else if (paramType === 'number' || paramType === 'integer') {
             if (input.value !== '') {
                 value = paramType === 'integer' ? parseInt(input.value, 10) : parseFloat(input.value);
+                hasValue = true;
             }
         } else if (paramType === 'array' || paramType === 'object') {
             if (input.value.trim()) {
                 try {
                     value = JSON.parse(input.value);
+                    hasValue = true;
                 } catch (e) {
                     alert(`Invalid JSON for parameter "${paramName}": ${e.message}`);
                     return null;
                 }
             }
         } else {
-            value = input.value || undefined;
+            if (input.value !== '') {
+                value = input.value;
+                hasValue = true;
+            }
         }
         
-        // Only add parameter if it has a value
-        if (value !== undefined && value !== '') {
+        // Override default with user value if provided
+        if (hasValue) {
             params[paramName] = value;
         }
     });
