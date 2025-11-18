@@ -446,6 +446,24 @@ function updateTools(tools, error) {
             // Generate parameter form HTML
             const schema = tool.inputSchema;
             const hasParams = schema && schema.properties && Object.keys(schema.properties).length > 0;
+            
+            // Check if all required parameters have default values
+            let hasDefaultsForRequired = false;
+            if (hasParams) {
+                const required = schema.required || [];
+                const properties = schema.properties;
+                
+                if (required.length === 0) {
+                    // No required parameters means we can run with defaults/empty params
+                    hasDefaultsForRequired = true;
+                } else {
+                    // Check if all required parameters have default values
+                    hasDefaultsForRequired = required.every(paramName => {
+                        return properties[paramName] && properties[paramName].default !== undefined;
+                    });
+                }
+            }
+            
             let paramsHtml = '';
             
             if (hasParams) {
@@ -495,9 +513,19 @@ function updateTools(tools, error) {
                 paramsHtml = `<div class="tool-params-section" data-tool-params="${index}">${paramsHtml}<div class="tool-actions"><button onclick="runTool(${index}); event.stopPropagation();" style="background: #1e3c72; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25); transition: all 0.2s ease; display: flex; align-items: center; gap: 4px; border: none; color: white; cursor: pointer;"><svg width="12" height="13" viewBox="0 0 71.884262 76.735161" style="flex-shrink: 0;"><path style="fill:none;stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-linejoin:miter" d="m 12.259,2 c -4.05249,0.15214 -7.259192,3.48167 -7.258988,7.53701 v 25.65631 0.39946 25.65632 c -1.58e-4,5.79375 6.261243,9.42401 11.289233,6.54533 l 45.286075,-23.39342 a 10.1794,10.1794 89.96398 0 0 -0.0114,-18.09387 L 16.28924,2.99196 c -1.224231,-0.70098 -2.620523,-1.04455 -4.030245,-0.99167 z" /></svg>Run Tool</button></div></div>`;
             }
             
-            // Generate header action: info badge + greyed out button if has params, normal run button otherwise
+            // Generate header action based on parameter status
             let headerAction = '';
-            if (hasParams) {
+            if (hasParams && hasDefaultsForRequired) {
+                // Has parameters but all required ones have defaults - show badge and enabled run button
+                headerAction = `
+                    <div class="tool-header-actions">
+                        <div class="tool-info-badge">
+                            <span>Defaults provided</span>
+                        </div>
+                        <button data-tool-index="${index}" onclick="runTool(${index}); event.stopPropagation();" style="background: ${buttonBg}; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: ${buttonShadow}; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px; border: none; color: white; cursor: pointer;"><svg width="12" height="13" viewBox="0 0 71.884262 76.735161" style="flex-shrink: 0;"><path style="fill:none;stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-linejoin:miter" d="m 12.259,2 c -4.05249,0.15214 -7.259192,3.48167 -7.258988,7.53701 v 25.65631 0.39946 25.65632 c -1.58e-4,5.79375 6.261243,9.42401 11.289233,6.54533 l 45.286075,-23.39342 a 10.1794,10.1794 89.96398 0 0 -0.0114,-18.09387 L 16.28924,2.99196 c -1.224231,-0.70098 -2.620523,-1.04455 -4.030245,-0.99167 z" /></svg>Run</button>
+                    </div>`;
+            } else if (hasParams && !hasDefaultsForRequired) {
+                // Has parameters but missing defaults for required ones - show badge and disabled run button
                 headerAction = `
                     <div class="tool-header-actions">
                         <div class="tool-info-badge">
@@ -506,6 +534,7 @@ function updateTools(tools, error) {
                         <button class="tool-run-button-disabled" style="padding: 6px 16px; font-size: 12px; border-radius: 4px; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px; border: none; color: white;"><svg width="12" height="13" viewBox="0 0 71.884262 76.735161" style="flex-shrink: 0;"><path style="fill:none;stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-linejoin:miter" d="m 12.259,2 c -4.05249,0.15214 -7.259192,3.48167 -7.258988,7.53701 v 25.65631 0.39946 25.65632 c -1.58e-4,5.79375 6.261243,9.42401 11.289233,6.54533 l 45.286075,-23.39342 a 10.1794,10.1794 89.96398 0 0 -0.0114,-18.09387 L 16.28924,2.99196 c -1.224231,-0.70098 -2.620523,-1.04455 -4.030245,-0.99167 z" /></svg>Run</button>
                     </div>`;
             } else {
+                // No parameters - show normal run button
                 headerAction = `<button data-tool-index="${index}" onclick="runTool(${index}); event.stopPropagation();" style="background: ${buttonBg}; padding: 6px 16px; font-size: 12px; border-radius: 4px; box-shadow: ${buttonShadow}; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px;"><svg width="12" height="13" viewBox="0 0 71.884262 76.735161" style="flex-shrink: 0;"><path style="fill:none;stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-linejoin:miter" d="m 12.259,2 c -4.05249,0.15214 -7.259192,3.48167 -7.258988,7.53701 v 25.65631 0.39946 25.65632 c -1.58e-4,5.79375 6.261243,9.42401 11.289233,6.54533 l 45.286075,-23.39342 a 10.1794,10.1794 89.96398 0 0 -0.0114,-18.09387 L 16.28924,2.99196 c -1.224231,-0.70098 -2.620523,-1.04455 -4.030245,-0.99167 z" /></svg>Run</button>`;
             }
             
