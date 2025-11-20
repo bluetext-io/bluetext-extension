@@ -3,7 +3,8 @@
   "displayName": "Bluetext Setup Assistant",
   "description": "Step-by-step setup wizard for Bluetext with Polytope, configuring files for MCP servers and coding agents",
   "version": "1.0.0",
-  "publisher": "bluetext",
+  "publisher": "Bluetext100",
+  "icon": "resources/icon-b1.png",
   "engines": {
     "vscode": "^1.80.0"
   },
