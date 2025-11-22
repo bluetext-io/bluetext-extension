@@ -2,11 +2,24 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { WizardPanel } from './wizardPanel';
+import { SidebarProvider } from './sidebarProvider';
 import { McpService } from './mcpService';
 
+let currentProvider: SidebarProvider | null = null;
+
+export function setCurrentProvider(provider: SidebarProvider): void {
+    currentProvider = provider;
+}
+
+function getProvider(): SidebarProvider {
+    if (!currentProvider) {
+        throw new Error('Provider not set - this should not happen');
+    }
+    return currentProvider;
+}
+
 export async function createPolytopeYml(skipPrompt: boolean = false): Promise<boolean> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Creating polytope.yml...', 'command');
     
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -71,7 +84,7 @@ export async function createPolytopeYml(skipPrompt: boolean = false): Promise<bo
 }
 
 export async function configureCline(): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Configuring Cline MCP settings...', 'command');
     
     const config = vscode.workspace.getConfiguration('bluetext');
@@ -149,7 +162,7 @@ export async function configureCline(): Promise<void> {
 }
 
 export async function configureClaudeCode(): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Configuring Claude Code MCP...', 'command');
     
     const config = vscode.workspace.getConfiguration('bluetext');
@@ -167,7 +180,7 @@ export async function configureClaudeCode(): Promise<void> {
 }
 
 export async function configureCopilot(): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Configuring Copilot MCP settings...', 'command');
     
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -218,7 +231,7 @@ export async function configureCopilot(): Promise<void> {
 }
 
 export async function initGit(): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Initializing Git repository...', 'command');
     
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -247,7 +260,7 @@ export async function initGit(): Promise<void> {
 }
 
 export async function startMCP(): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('Starting MCP server...', 'command');
     
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -288,7 +301,7 @@ export async function startMCP(): Promise<void> {
 }
 
 export async function runQuickStart(agentChoice: 'cline' | 'claude' | 'copilot'): Promise<void> {
-    const panel = WizardPanel.getInstance();
+    const panel = getProvider();
     panel.logToTerminal('='.repeat(50), 'info');
     panel.logToTerminal('Starting Quick Setup...', 'command');
     panel.logToTerminal('='.repeat(50), 'info');

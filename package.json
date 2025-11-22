@@ -25,17 +25,25 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bluetext-sidebar",
+          "title": "Bluetext Setup",
+          "icon": "Icons/svgtaskbaricon.svg"
+        }
+      ]
+    },
+    "views": {
+      "bluetext-sidebar": [
+        {
+          "type": "webview",
+          "id": "bluetext.sidebarView",
+          "name": "Setup Wizard"
+        }
+      ]
+    },
     "commands": [
-      {
-        "command": "bluetext.openFromActivityBar",
-        "title": "Open Bluetext Setup Wizard",
-        "icon": "resources/icon-b.svg"
-      },
-      {
-        "command": "bluetext.setupWizard",
-        "title": "Bluetext: Complete Setup Wizard",
-        "category": "Bluetext"
-      },
       {
         "command": "bluetext.createPolytopeYml",
         "title": "Bluetext: Create polytope.yml",
@@ -67,27 +75,7 @@
         "category": "Bluetext"
       }
     ],
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "bluetext.openFromActivityBar",
-          "when": "false"
-        }
-      ],
-      "explorer/context": [
-        {
-          "command": "bluetext.setupWizard",
-          "group": "navigation"
-        }
-      ],
-      "view/title": [
-        {
-          "command": "bluetext.openFromActivityBar",
-          "when": "view == workbench.explorer.fileView",
-          "group": "navigation"
-        }
-      ]
-    },
+    "menus": {},
     "configuration": {
       "title": "Bluetext Setup",
       "properties": {
@@ -116,18 +104,23 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "build:css": "npx tailwindcss -i ./src/styles/input.css -o ./out/styles.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/styles/input.css -o ./out/styles.css --watch",
+    "compile": "npm run build:css && tsc -p ./",
+    "watch": "npm run watch:css & tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
     "@types/node": "^20.x",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.x",
     "@typescript-eslint/parser": "^6.x",
+    "autoprefixer": "^10.4.22",
     "eslint": "^8.x",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
     "typescript": "^5.x"
   },
   "repository": {

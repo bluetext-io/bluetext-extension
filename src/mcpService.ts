@@ -1,11 +1,12 @@
 import * as http from 'http';
 import * as vscode from 'vscode';
-import { WizardPanel } from './wizardPanel';
+import { SidebarProvider } from './sidebarProvider';
 
 export class McpService {
     private static instance: McpService;
     private healthCheckInterval: NodeJS.Timeout | undefined;
     private isMonitoring: boolean = false;
+    private currentProvider: SidebarProvider | null = null;
 
     private constructor() {}
 
@@ -16,13 +17,24 @@ export class McpService {
         return McpService.instance;
     }
 
+    public setCurrentProvider(provider: SidebarProvider): void {
+        this.currentProvider = provider;
+    }
+
+    private getProvider(): SidebarProvider {
+        if (!this.currentProvider) {
+            throw new Error('Provider not set - this should not happen');
+        }
+        return this.currentProvider;
+    }
+
     public startHealthMonitoring(): void {
         if (this.isMonitoring) {
             return; // Already monitoring
         }
 
         this.isMonitoring = true;
-        const panel = WizardPanel.getInstance();
+        const panel = this.getProvider();
         
         panel.logToTerminal('🔍 Starting MCP server health monitoring...', 'info');
 
@@ -42,14 +54,15 @@ export class McpService {
         }
         this.isMonitoring = false;
         
-        const panel = WizardPanel.getInstance();
-        panel.logToTerminal('🛑 Stopped MCP server health monitoring', 'info');
+        if (this.currentProvider) {
+            this.currentProvider.logToTerminal('🛑 Stopped MCP server health monitoring', 'info');
+        }
     }
 
     private async checkServerHealth(): Promise<void> {
         const config = vscode.workspace.getConfiguration('bluetext');
         const mcpPort = config.get<number>('mcpPort', 31338);
-        const panel = WizardPanel.getInstance();
+        const panel = this.getProvider();
 
         return new Promise<void>((resolve) => {
             const options = {
@@ -113,7 +126,7 @@ export class McpService {
             return; // Don't update if we stopped monitoring
         }
 
-        const panel = WizardPanel.getInstance();
+        const panel = this.getProvider();
         panel.logToTerminal('⚠️  MCP server is not responding - resetting step 4', 'error');
         panel.updateStepStatus(4, 'pending');
         
@@ -122,7 +135,7 @@ export class McpService {
     }
 
     public async fetchTools(): Promise<void> {
-        const panel = WizardPanel.getInstance();
+        const panel = this.getProvider();
         const config = vscode.workspace.getConfiguration('bluetext');
         const mcpPort = config.get<number>('mcpPort', 31338);
         
@@ -247,7 +260,7 @@ export class McpService {
     }
 
     public async executeTool(toolName: string, toolSchema: any, parameters?: any): Promise<void> {
-        const panel = WizardPanel.getInstance();
+        const panel = this.getProvider();
         const config = vscode.workspace.getConfiguration('bluetext');
         const mcpPort = config.get<number>('mcpPort', 31338);
         

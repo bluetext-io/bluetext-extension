@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetext</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #90caf9; /* Even darker blue background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 3rem 5rem;
+            border-radius: 30px;
+            box-shadow: 
+                0 20px 60px rgba(1, 87, 155, 0.15),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+            text-align: center;
+        }
+
+        .card-main {
+            transform: perspective(1000px) rotateX(5deg) rotateY(-5deg);
+        }
+
+        .card-secondary {
+            transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+            padding: 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: auto;
+            height: auto;
+            max-width: 300px; /* Initial max-width */
+            
+            /* Use Grid to overlap content */
+            display: grid;
+            place-items: center;
+        }
+
+        .card-secondary.expanded {
+            transform: perspective(1000px) rotateX(0) rotateY(0) scale(1);
+            width: 90%;
+            max-width: 400px; /* Reduced from 600px */
+            height: auto;
+            min-height: 300px;
+            z-index: 10;
+            
+            /* Align to top-left when expanded */
+            place-items: start;
+            text-align: left;
+            
+            padding: 2rem;
+            
+            /* Animation sequence: 
+               1. Wait 0.2s (for text to fade out)
+               2. Expand slowly over 0.8s
+            */
+            transition: 
+                width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s,
+                height 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s,
+                max-width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s,
+                transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s,
+                padding 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s;
+        }
+
+        .card-content-initial {
+            grid-area: 1 / 1;
+            transition: opacity 0.2s ease;
+            opacity: 1;
+            width: 100%;
+        }
+
+        .card-content-expanded {
+            grid-area: 1 / 1;
+            position: absolute; /* Out of flow initially so it doesn't affect size */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .card-secondary.expanded .card-content-initial {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .card-secondary.expanded .card-content-expanded {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            
+            /* Back in flow to determine expanded size */
+            position: relative; 
+            height: auto;
+            
+            /* Fade in after expansion is complete (0.2s delay + 0.8s duration = 1.0s) */
+            transition: opacity 0.4s ease 1.0s;
+        }
+
+        .expanded-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #01579b;
+            margin-bottom: 1.5rem;
+        }
+
+        .expanded-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #0277bd;
+        }
+
+        .expanded-link {
+            margin-top: 2rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #01579b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded-link:hover {
+            transform: translateX(5px);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            color: #01579b;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        .card-action {
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg); /* Flat initially */
+            padding: 1.5rem 3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .card:hover {
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1.02);
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        h1 {
+            font-size: 6rem;
+            font-weight: 800;
+            color: #01579b;
+            margin: 0;
+            text-transform: lowercase;
+            letter-spacing: -3px;
+            text-shadow: 0 4px 12px rgba(1, 87, 155, 0.2);
+        }
+
+        .secondary-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0277bd;
+            margin: 0.5rem 0;
+            letter-spacing: -0.5px;
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .secondary-text:hover {
+            transform: scale(1.1);
+            color: #01579b;
+        }
+
+        .action-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #01579b;
+            text-transform: lowercase;
+            letter-spacing: -1px;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: #01579b;
+            transition: transform 0.3s ease;
+        }
+
+        .card-action:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        /* Reveal Card Styles */
+        .reveal-card-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 450px;
+            height: 300px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .reveal-card {
+            width: 100%;
+            height: 250px;
+            
+            /* Glassmorphism to match other cards */
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 30px;
+            box-shadow: 
+                0 20px 60px rgba(1, 87, 155, 0.15),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateY(190px); /* Initial hidden state */
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            cursor: pointer;
+            pointer-events: auto;
+            color: #01579b;
+        }
+
+        .reveal-card:hover {
+            transform: translateY(100px); /* Reveal state - less high */
+        }
+
+        .reveal-card-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .reveal-arrow {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 8px;
+            color: #01579b;
+            animation: reveal-bounce 2s infinite;
+        }
+
+        .reveal-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #01579b;
+            margin: 0;
+        }
+
+        .reveal-card-content {
+            text-align: center;
+            color: #0277bd;
+            line-height: 1.6;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.1s;
+        }
+
+        .reveal-card:hover .reveal-card-content {
+            opacity: 1;
+        }
+
+        .reveal-card-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.1s;
+        }
+
+        .reveal-card:hover .reveal-card-logos {
+            opacity: 1;
+        }
+
+        .reveal-logo {
+            height: 50px;
+            width: auto;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .reveal-logo:hover {
+            transform: scale(1.1);
+        }
+
+        .logo-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .logo-tooltip {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(1, 87, 155, 0.9);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logo-container:hover .logo-tooltip {
+            opacity: 1;
+            visibility: visible;
+            top: -40px; /* Slight movement effect */
+        }
+
+        @keyframes reveal-bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-5px);}
+            60% {transform: translateY(-3px);}
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="reveal-card-wrapper">
+        <div class="reveal-card">
+            <div class="reveal-card-header">
+                <svg class="reveal-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+            </div>
+            <div class="reveal-card-logos">
+                <div class="logo-container" onclick="openLink('https://docs.bluetext.io/what-is-bluetext')">
+                    <img class="reveal-logo" src="{{svgtaskbaricon}}" alt="Taskbar Icon" />
+                    <span class="logo-tooltip">Bluetext Homepage</span>
+                </div>
+                <div class="logo-container" onclick="openLink('https://cillers.com/')">
+                    <img class="reveal-logo" src="{{cillers}}" alt="Cillers" />
+                    <span class="logo-tooltip">Cillers Homepage</span>
+                </div>
+                <div class="logo-container" onclick="openLink('https://polytope.com/')">
+                    <img class="reveal-logo" src="{{polytope}}" alt="Polytope" />
+                    <span class="logo-tooltip">Polytope homepage</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="text-overlay">
+        <div class="card card-main">
+            <h1>bluetext</h1>
+        </div>
+        <div class="card card-secondary" id="infoCard">
+            <div class="card-content-initial">
+                <div class="secondary-text" onclick="expandCard('bluetext')">What is bluetext?</div>
+                <div class="secondary-text" onclick="expandCard('polytope')">Polytope</div>
+            </div>
+            <div class="card-content-expanded" id="expandedContent">
+                <div class="close-btn" onclick="closeCard()">×</div>
+                <div class="expanded-title" id="expandedTitle">Title</div>
+                <div class="expanded-text" id="expandedBody">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </div>
+                <div class="expanded-link" onclick="openLink()">
+                    <span id="linkText">learn more</span>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+        </div>
+        <div class="card card-action">
+            <span class="action-text">continue</span>
+            <span class="arrow">→</span>
+        </div>
+    </div>
+
+    <!-- Import Three.js from CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        const vscode = acquireVsCodeApi();
+
+        document.querySelector('.card-action').addEventListener('click', () => {
+            vscode.postMessage({ command: 'checkWorkspace' });
+        });
+
+        // Scene Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#90caf9'); // Match CSS background
+        scene.fog = new THREE.Fog('#90caf9', 10, 50);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 20;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0x00b0ff, 0.5);
+        pointLight.position.set(-10, 10, -10);
+        scene.add(pointLight);
+
+        // Materials (Plastic/Toy look)
+        const blueShades = [
+            0x0288d1, // Light Blue
+            0x01579b, // Dark Blue
+            0x4fc3f7, // Cyan Blue
+            0x00b0ff, // Vivid Blue
+            0x81d4fa  // Pale Blue
+        ];
+
+        function getRandomMaterial() {
+            const color = blueShades[Math.floor(Math.random() * blueShades.length)];
+            return new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.4,
+                metalness: 0.1,
+                flatShading: true // Low poly look
+            });
+        }
+
+        // Geometries
+        const geometries = [
+            new THREE.IcosahedronGeometry(1, 0), // Low poly sphere
+            new THREE.BoxGeometry(1.5, 1.5, 1.5),
+            new THREE.TetrahedronGeometry(1.2, 0),
+            new THREE.OctahedronGeometry(1, 0),
+            new THREE.CylinderGeometry(0.8, 0.8, 2, 6), // Hexagonal prism
+            new THREE.TorusGeometry(1, 0.4, 8, 20) // Donut
+        ];
+
+        const shapes = [];
+
+        function createShape() {
+            const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+            const material = getRandomMaterial();
+            const mesh = new THREE.Mesh(geometry, material);
+
+            // Random Position
+            mesh.position.x = (Math.random() - 0.5) * 30;
+            mesh.position.y = (Math.random() - 0.5) * 30;
+            mesh.position.z = (Math.random() - 0.5) * 10 - 5; // Keep somewhat behind text
+
+            // Random Rotation
+            mesh.rotation.x = Math.random() * Math.PI;
+            mesh.rotation.y = Math.random() * Math.PI;
+
+            // Random Scale
+            const scale = Math.random() * 1.5 + 0.5;
+            mesh.scale.set(scale, scale, scale);
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            // Store rotation speed
+            mesh.userData = {
+                rotSpeedX: (Math.random() - 0.5) * 0.02,
+                rotSpeedY: (Math.random() - 0.5) * 0.02,
+                floatSpeed: Math.random() * 0.01 + 0.005,
+                floatOffset: Math.random() * Math.PI * 2
+            };
+
+            scene.add(mesh);
+            shapes.push(mesh);
+        }
+
+        // Create multiple shapes
+        for (let i = 0; i < 40; i++) {
+            createShape();
+        }
+
+        // Animation Loop
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            shapes.forEach(mesh => {
+                mesh.rotation.x += mesh.userData.rotSpeedX;
+                mesh.rotation.y += mesh.userData.rotSpeedY;
+                
+                // Gentle floating motion
+                mesh.position.y += Math.sin(time * 0.001 + mesh.userData.floatOffset) * 0.01;
+            });
+
+            // Slowly rotate camera for dynamic view
+            // camera.position.x = Math.sin(time * 0.0002) * 2;
+            // camera.position.y = Math.cos(time * 0.0002) * 2;
+            // camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        animate(0);
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Card Interaction
+        let currentLinkUrl = '';
+
+        window.expandCard = function(type) {
+            const card = document.getElementById('infoCard');
+            const title = document.getElementById('expandedTitle');
+            const body = document.getElementById('expandedBody');
+            const linkText = document.getElementById('linkText');
+
+            if (type === 'bluetext') {
+                title.innerText = 'What is bluetext?';
+                body.innerText = 'Bluetext is a comprehensive development framework built on Polytope that accelerates enterprise-grade application development. It provides pre-configured templates for integrating essential services including databases , workflow orchestration tools, and full-stack components. While optimized for AI coding assistants through its MCP server integration, experienced developers can also leverage these templates and tools to rapidly scaffold production-ready infrastructure without building everything from scratch.';
+                linkText.innerText = 'learn more about bluetext';
+                currentLinkUrl = 'https://docs.bluetext.io/what-is-bluetext';
+            } else if (type === 'polytope') {
+                title.innerText = 'Polytope';
+                body.innerText = ' Polytope is an automation layer that makes it easy to run anything, anywhere—from apps to CI/CD pipelines to ML workloads—using a single interface for containerized services via Docker or Kubernetes. In Bluetext, Polytope serves as both the infrastructure engine and the intelligence layer: it orchestrates all containerized services while running as an MCP server that expose Bluetexts templates and tools to AI coding assistants.';
+                linkText.innerText = 'learn more about polytope';
+                currentLinkUrl = 'https://polytope.com/docs';
+            }
+
+            card.classList.add('expanded');
+        };
+
+        window.openLink = function(url) {
+            const targetUrl = url || currentLinkUrl;
+            if (targetUrl) {
+                vscode.postMessage({ command: 'openLink', url: targetUrl });
+            }
+        };
+
+        window.closeCard = function(event) {
+            if(event) event.stopPropagation();
+            const card = document.getElementById('infoCard');
+            card.classList.remove('expanded');
+        };
+    </script>
+</body>
+</html>

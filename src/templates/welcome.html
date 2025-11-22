@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetext Welcome</title>
+</head>
+<body class="m-0 p-0 w-full min-h-screen bg-[#0a1628] overflow-x-hidden overflow-y-auto relative font-sans text-white">
+    <!-- Aurora effect layers -->
+    <div class="fixed inset-0 z-0 opacity-40 overflow-hidden pointer-events-none">
+        <div class="absolute w-[200%] h-[200%] animate-aurora blur-[80px]"
+             style="background: linear-gradient(45deg, transparent 0%, rgba(0, 255, 200, 0.3) 25%, rgba(100, 150, 255, 0.3) 50%, rgba(200, 100, 255, 0.3) 75%, transparent 100%);"></div>
+        <div class="absolute w-[200%] h-[200%] animate-aurora-2 blur-[80px]"
+             style="background: linear-gradient(-45deg, transparent 0%, rgba(50, 200, 255, 0.25) 30%, rgba(150, 100, 255, 0.25) 60%, transparent 100%);"></div>
+    </div>
+
+    <!-- Gradient blobs -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none" style="filter: blur(120px);">
+        <div class="absolute rounded-full animate-float w-[600px] h-[600px] top-[20%] -left-[10%]" 
+             style="background: radial-gradient(circle, rgba(30, 144, 255, 0.8), rgba(30, 144, 255, 0.3));"></div>
+        <div class="absolute rounded-full animate-float-2 w-[700px] h-[700px] top-[50%] left-[50%]" 
+             style="background: radial-gradient(circle, rgba(0, 119, 255, 0.7), rgba(0, 119, 255, 0.2));"></div>
+        <div class="absolute rounded-full animate-float-3 w-[550px] h-[550px] top-[70%] left-[10%]" 
+             style="background: radial-gradient(circle, rgba(65, 105, 225, 0.6), rgba(65, 105, 225, 0.2));"></div>
+    </div>
+
+    <!-- Vignette overlay -->
+    <div class="fixed inset-0 z-[10] pointer-events-none" 
+         style="background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0, 0, 0, 0.15) 80%, rgba(0, 0, 0, 0.3) 100%);">
+    </div>
+
+    <!-- Content with proper glassmorphism -->
+    <div class="relative z-[2] min-h-screen flex flex-col items-center justify-center p-12 gap-8" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem;">
+        <!-- First Glass morphism box -->
+        <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/30 text-center max-w-md w-full">
+            <h1 class="text-6xl font-bold mb-6 text-white animate-glow tracking-tight">Bluetext</h1>
+            <p class="text-lg mb-8 text-white/90 leading-relaxed font-light">Setup wizard for Polytope MCP integration with your coding agent</p>
+            
+            <button class="bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 rounded-full border-2 border-white/30 px-10 py-4 text-base font-semibold text-white/90 cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 transform" 
+                    onclick="handleContinue()">
+                Continue
+            </button>
+            
+            <div id="message" class="mt-6 px-6 py-3 bg-red-500/20 backdrop-blur-md border border-red-400/40 rounded-2xl text-white text-sm hidden animate-slideIn shadow-lg">
+                Please open a workspace folder to continue
+            </div>
+        </div>
+
+        <!-- Second Glass morphism box -->
+        <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/30 text-center max-w-md w-full">
+            <p class="text-lg text-white/90 leading-relaxed font-light">
+                Make sure you have Polytope installed on your computer, and you have created a directory for your project. For more information, consult the documentation below.
+            </p>
+        </div>
+
+        <!-- Third Glass morphism box -->
+        <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/30 text-center max-w-md w-full">
+            <h2 class="text-5xl font-extrabold mb-6 text-white tracking-tight" style="font-weight: 900; font-size: 2rem; line-height: 1;">Documentation</h2>
+            <ul class="space-y-2 text-left">
+                <li>
+                    <a href="https://docs.bluetext.io/what-is-bluetext" class="block p-3 hover:bg-white/10 rounded-lg transition-all duration-200 text-white/90 hover:text-white">
+                        <span class="font-semibold">Bluetext Documentation</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://polytope.dev/docs" class="block p-3 hover:bg-white/10 rounded-lg transition-all duration-200 text-white/90 hover:text-white">
+                        <span class="font-semibold">Polytope Documentation</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://github.com/bluetext-io/bluetext" class="block p-3 hover:bg-white/10 rounded-lg transition-all duration-200 text-white/90 hover:text-white">
+                        <span class="font-semibold">Bluetext Repository</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        function handleContinue() {
+            vscode.postMessage({ command: 'checkWorkspace' });
+        }
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'showMessage') {
+                const messageEl = document.getElementById('message');
+                messageEl.classList.remove('hidden');
+                setTimeout(() => {
+                    messageEl.classList.add('hidden');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Keyframe animations */
+@keyframes aurora-flow {
+  0%, 100% {
+    transform: translate(-25%, -25%) rotate(0deg);
+  }
+  33% {
+    transform: translate(-30%, -20%) rotate(5deg);
+  }
+  66% {
+    transform: translate(-20%, -30%) rotate(-5deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(60px, -40px) scale(1.1);
+  }
+  50% {
+    transform: translate(-50px, 50px) scale(0.9);
+  }
+  75% {
+    transform: translate(70px, 40px) scale(1.05);
+  }
+}
+
+@keyframes scroll-text {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(100, 150, 255, 0.5), 0 0 40px rgba(100, 150, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(100, 150, 255, 0.8), 0 0 60px rgba(100, 150, 255, 0.5);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply animations */
+.animate-aurora {
+  animation: aurora-flow 20s ease-in-out infinite;
+}
+
+.animate-aurora-2 {
+  animation: aurora-flow 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.animate-float {
+  animation: float 20s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.animate-float-3 {
+  animation: float 22s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.animate-scroll {
+  animation: scroll-text linear infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease;
+}
+
+/* Custom utility classes */
+.text-line-inner > span {
+  display: inline-block;
+  min-width: 100vw;
+}
+
+.word {
+  transition: opacity 0.3s ease;
+}

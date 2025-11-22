@@ -9,61 +9,31 @@
         html, body { height: 100%; overflow: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #1e3c72;
+            background: #f5f5f5;
             color: #333;
             display: flex;
             flex-direction: column;
             position: relative;
         }
-        
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(to right, rgba(100, 149, 237, 0.2) 1px, transparent 0px),
-                linear-gradient(to bottom, rgba(100, 149, 237, 0.2) 1px, transparent 0px);
-            background-size: 50px 50px;
-            background-repeat: repeat;
-            z-index: 0;
-            animation: driftGrid 15s linear infinite;
-            pointer-events: none;
-        }
-        
-        @keyframes driftGrid {
-            0% {
-                background-position: 0% 0%;
-            }
-            100% {
-                background-position: 50px 50px;
-            }
-        }
-        .main-layout { display: flex; flex-direction: row; height: 100vh; position: relative; z-index: 1; }
+        .main-layout { display: flex; flex-direction: column; height: 100vh; position: relative; z-index: 1; }
         
         .sidebar {
-            width: 75px;
-            background: rgba(66, 219, 239, 0.112);
-            backdrop-filter: blur(1.7px) saturate(150%);
-            -webkit-backdrop-filter: blur(10px) saturate(150%);
+            height: 70px;
+            background: #1e3c72;
             display: flex;
-            flex-direction: column;
-            padding: 10px 8px;
-            gap: 10px;
+            flex-direction: row;
+            padding: 8px 20px 8px 8px;
+            gap: 8px;
             z-index: 10;
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100vh;
+            align-items: center;
+            width: 100%;
         }
         
         .tab-button {
             display: flex;
             align-items: center;
-            gap: 0;
-            padding: 6px;
+            gap: 6px;
+            padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -73,10 +43,12 @@
             overflow: visible;
             justify-content: center;
             -webkit-backdrop-filter: blur(10px);
+            white-space: nowrap;
         }
         
         .tab-button:hover {
-            transform: translateX(10px);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .tab-button.active {
@@ -87,17 +59,17 @@
         }
         
         .tab-button.active:hover {
-            transform: translateX(10px);
+            transform: translateY(-2px);
         }
         
         .tab-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 56px;
-            height: 50px;
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
-            padding: 7px;
+            padding: 6px;
             flex-shrink: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -148,42 +120,26 @@
         }
         
         .tab-button span {
-            position: absolute;
-            left: 100%;
-            margin-left: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #1e3c72;
             color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        .tab-button:hover span {
-            opacity: 1;
         }
         
         .wizard-panel {
             flex: 1;
             overflow-y: auto;
-            background: transparent;
-            position: relative; 
-            z-index: 1; 
-            margin-left: 90px; 
-        }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        
-        .header { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 2px solid #f0f0f0; }
-        .unified-card { 
             background: white;
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative; 
+            z-index: 1;
+        }
+        .container { max-width: 100%; width: 100%; height: 100%; margin: 0; padding: 20px 20px; }
+        
+        .header { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 2px solid #e0e0e0; }
+        .unified-card { 
+            background: transparent;
+            padding: 0; 
+            border-radius: 0; 
+            box-shadow: none;
+            margin-bottom: 0;
+            height: 100%;
         }
 
         .header-clickable {
@@ -554,7 +510,7 @@
     <div class="main-layout">
         <div class="sidebar">
             <div class="tab-button active" onclick="switchTab('wizard')">
-                <div class="tab-icon">
+                <div class="tab-icon" style="padding: 3px;">
                     <svg viewBox="0 0 92.796 99.806" xmlns="http://www.w3.org/2000/svg">
                         <path style="fill:#ffffff;fill-opacity:1;stroke:#f9f9f9;stroke-width:3.421;stroke-linecap:round;stroke-linejoin:round" d="m 72.509,32.896 -6.189,-6.522 -64.61,64.609 5.598,7.112 z"/>
                         <path style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:3.273;stroke-linecap:round;stroke-linejoin:round" d="M 85.08,8.458 73.354,20.184 79.275,26.424 91.16,14.539 Z"/>
@@ -568,7 +524,7 @@
             </div>
             
             <div class="tab-button" onclick="switchTab('tools')">
-                <div class="tab-icon">
+                <div class="tab-icon" style="padding: 3px;">
                     <svg viewBox="0 0 107.688 109.773" xmlns="http://www.w3.org/2000/svg">
                         <g transform="translate(-45.471,-18.226)">
                             <path style="fill:#ffffff" d="m 125.866,18.410 c -10.741,1.436 -19.373,10.067 -20.810,20.808 -0.232,1.737 -0.232,4.595 0,6.331 1.437,10.741 10.068,19.373 20.810,20.810 1.737,0.232 4.595,0.232 6.331,0 10.927,-1.462 19.669,-10.369 20.876,-21.369 0.157,-1.433 0.105,-3.783 -0.194,-5.191 -0.274,-1.292 -2.066,-0.911 -3.771,0.793 l -8.082,8.076 c -0.979,0.979 -2.565,2.622 -3.808,3.216 -0.681,0.325 -1.396,0.535 -2.112,0.620 -1.719,0.206 -4.385,-1.075 -5.972,-1.821 -0.999,-0.470 -3.141,-1.429 -4.468,-2.567 -0.456,-0.391 -0.880,-0.816 -1.270,-1.273 -1.135,-1.329 -2.314,-3.950 -3.057,-5.539 -0.467,-0.997 -1.518,-3.187 -1.311,-4.905 0.061,-0.504 0.183,-1.007 0.363,-1.498 0.600,-1.633 2.728,-3.636 3.970,-4.874 2.982,-2.974 5.894,-6.022 8.894,-8.978 1.248,-1.230 0.893,-2.557 -0.850,-2.731 -1.306,-0.130 -3.803,-0.140 -5.540,0.092 z"/>
@@ -582,7 +538,7 @@
             </div>
             
             <div class="tab-button" onclick="switchTab('console')">
-                <div class="tab-icon">
+                <div class="tab-icon" style="padding: 1px;">
                     <svg viewBox="0 0 181.541 119.165" xmlns="http://www.w3.org/2000/svg">
                         <g transform="translate(-31.009,-102.577)">
                             <path style="fill:#ffffff;fill-opacity:0;stroke:#ffffff;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round" d="M 103.546,137.506 H 40.775 v 75.477 h 62.662 m 0.109,-75.477 h 62.771 v 75.477 h -62.662" transform="translate(18.234,-29.180)"/>

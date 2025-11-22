@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Reveal Demo</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .card-wrapper {
+            /* The wrapper acts as the masking boundary */
+            width: 320px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end; /* Aligns the card to the bottom initially */
+            justify-content: center;
+            /* Border for visualization of the container area */
+            /* border: 1px dashed #444; */ 
+        }
+
+        .card {
+            width: 100%;
+            height: 400px; /* The card is tall */
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+            
+            /* Animation setup */
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); /* Smooth "slow" feel */
+            
+            /* Initial State: Pushed down so only the top is visible */
+            /* Card Height (400px) - Visible Top (approx 70px) = 330px */
+            transform: translateY(330px);
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        /* Hover State */
+        .card:hover {
+            /* Final State: Pushed down slightly to keep the "very bottom" hidden */
+            /* We want to hide say 40px at the bottom */
+            transform: translateY(40px);
+        }
+
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .arrow {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 8px;
+            color: #666;
+            animation: bounce 2s infinite;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .card-content {
+            text-align: center;
+            color: #666;
+            line-height: 1.6;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.1s;
+        }
+
+        .card:hover .card-content {
+            opacity: 1;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-5px);}
+            60% {transform: translateY(-3px);}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <!-- Simple SVG Arrow -->
+                <svg class="arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                <h3 class="card-title">Swipe Up</h3>
+            </div>
+            <div class="card-content">
+                <p>This card reveals itself when you hover.</p>
+                <p>It uses a smooth transition to slide up from the bottom.</p>
+                <p>Notice how the bottom edge remains tucked away, maintaining a connection to the source.</p>
+                <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 8px; width: 100%;">
+                    <small>Extra details here</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
