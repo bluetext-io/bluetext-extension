@@ -90,28 +90,51 @@ export async function configureCline(): Promise<void> {
     const config = vscode.workspace.getConfiguration('bluetext');
     const mcpPort = config.get<number>('mcpPort', 31338);
 
-    const codeServerPath = '/root/.local/share/code-server/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json';
-    let clineSettingsPath: string;
+    let clineSettingsPath: string | null = null;
 
-    if (fs.existsSync(path.dirname(codeServerPath))) {
-        clineSettingsPath = codeServerPath;
+    // 1. Check for code-server (Linux specific, but good to check generally)
+    // code-server defaults to ~/.local/share/code-server
+    const codeServerDir = path.join(os.homedir(), '.local', 'share', 'code-server');
+    
+    if (process.platform === 'linux' && fs.existsSync(codeServerDir)) {
+        clineSettingsPath = path.join(codeServerDir, 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
         panel.logToTerminal('Detected code-server environment', 'info');
     } else {
-        const appData = process.env.APPDATA || 
-                        (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') : 
-                         path.join(os.homedir(), '.config'));
+        // 2. Standard Editors
+        let appData: string;
+        if (process.platform === 'win32') {
+            appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+        } else if (process.platform === 'darwin') {
+            appData = path.join(os.homedir(), 'Library', 'Application Support');
+        } else {
+            appData = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+        }
+
+        // Detect current editor to prioritize
+        const appName = vscode.env.appName.toLowerCase();
+        let currentEditorDir = 'Code';
+        if (appName.includes('vscodium')) {
+            currentEditorDir = 'VSCodium';
+        } else if (appName.includes('oss')) {
+            currentEditorDir = 'Code - OSS';
+        }
+
+        // Check potential paths to find where the user config actually lives
+        // We prioritize the current editor, then check others
+        const candidates = [currentEditorDir, 'Code', 'VSCodium', 'Code - OSS'];
         
-        const editorName = vscode.env.appName.toLowerCase().includes('vscodium') ? 'VSCodium' : 'Code';
-        
-        clineSettingsPath = path.join(
-            appData,
-            editorName,
-            'User',
-            'globalStorage',
-            'saoudrizwan.claude-dev',
-            'settings',
-            'cline_mcp_settings.json'
-        );
+        for (const dir of candidates) {
+            const configDir = path.join(appData, dir);
+            if (fs.existsSync(configDir)) {
+                clineSettingsPath = path.join(configDir, 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
+                break;
+            }
+        }
+
+        // Fallback if nothing found: use current editor's path
+        if (!clineSettingsPath) {
+            clineSettingsPath = path.join(appData, currentEditorDir, 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
+        }
     }
 
     panel.logToTerminal(`Settings path: ${clineSettingsPath}`, 'info');

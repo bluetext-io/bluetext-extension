@@ -8,9 +8,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+            background: var(--vscode-sideBar-background);
+            color: var(--vscode-foreground);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -19,7 +19,7 @@
         
         .sidebar {
             height: 70px;
-            background: #1e3c72;
+            background: var(--vscode-activityBar-background);
             display: flex;
             flex-direction: row;
             padding: 8px 20px 8px 8px;
@@ -27,6 +27,7 @@
             z-index: 10;
             align-items: center;
             width: 100%;
+            border-bottom: none;
         }
         
         .tab-button {
@@ -42,20 +43,19 @@
             position: relative;
             overflow: visible;
             justify-content: center;
-            -webkit-backdrop-filter: blur(10px);
             white-space: nowrap;
+            color: var(--vscode-activityBar-inactiveForeground);
         }
         
         .tab-button:hover {
             transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: var(--vscode-activityBar-foreground);
         }
         
         .tab-button.active {
-            background: linear-gradient(
-                145deg,
-                rgba(255, 255, 255, 0.18) 100%
-            );
+            background: transparent;
+            color: var(--vscode-activityBar-foreground);
         }
         
         .tab-button.active:hover {
@@ -76,63 +76,28 @@
             overflow: hidden;
         }
         
-        .tab-icon::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            border-radius: 8px;
-        }
-        
-        .tab-icon::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            border-radius: 8px;
-        }
-        
-        .tab-button.active .tab-icon {
-        }
-        
         .tab-icon svg {
             width: 100%;
             height: 100%;
             position: relative;
             z-index: 1;
-        }
-        
-        .tab-button::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            border-radius: 8px;
+            fill: currentColor;
         }
         
         .tab-button span {
-            color: white;
+            color: inherit;
         }
         
         .wizard-panel {
             flex: 1;
             overflow-y: auto;
-            background: white;
+            background: transparent;
             position: relative; 
             z-index: 1;
         }
         .container { max-width: 100%; width: 100%; height: 100%; margin: 0; padding: 20px 20px; }
         
-        .header { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 2px solid #e0e0e0; }
+        .header { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid var(--vscode-panel-border); }
         .unified-card { 
             background: transparent;
             padding: 0; 
@@ -153,28 +118,28 @@
             margin: -4px 0;
             border-radius: 4px;
         }
-        .header-clickable:hover { background-color: rgba(42, 82, 152, 0.02); }
+        .header-clickable:hover { background-color: var(--vscode-list-hoverBackground); }
         .header-title-section { flex: 1; }
-        h1 { color: #1e3c72; font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px; text-align: left; }
-        .subtitle { color: #5a6c7d; font-size: 15px; line-height: 1.6; text-align: left; }
+        h1 { color: var(--vscode-foreground); font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px; text-align: left; }
+        .subtitle { color: var(--vscode-descriptionForeground); font-size: 15px; line-height: 1.6; text-align: left; }
         .card-content { max-height: 5000px; overflow: hidden; transition: max-height 0.3s ease; }
         .card-content.collapsed { max-height: 0; }
-        .header-arrow { flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; opacity: 0.6; }
+        .header-arrow { flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; opacity: 0.6; color: var(--vscode-foreground); }
         .header-arrow.collapsed { transform: rotate(-90deg); }
         .steps-container { position: relative; padding-left: 20px; }
         .step { padding: 8px 0; display: flex; align-items: center; gap: 20px; position: relative; z-index: 1; }
         .step:not(:last-child) { margin-bottom: 4px; padding-bottom: 12px; position: relative; }
-        .step:not(:last-child)::after { content: ''; position: absolute; left: 14.5px; top: 44px; height: calc(100% - 36px); width: 3px; background: #d0d1d2; border-radius: 2px; z-index: 0; transition: background-color 0.3s ease; }
-        .step[data-step="1"]::after { background: var(--line-color-1, #d0d1d2); }
-        .step[data-step="2"]::after { background: var(--line-color-2, #d0d1d2); }
-        .step[data-step="3"]::after { background: var(--line-color-3, #d0d1d2); }
+        .step:not(:last-child)::after { content: ''; position: absolute; left: 14.5px; top: 44px; height: calc(100% - 36px); width: 3px; background: var(--vscode-panel-border); border-radius: 2px; z-index: 0; transition: background-color 0.3s ease; }
+        .step[data-step="1"]::after { background: var(--line-color-1, var(--vscode-panel-border)); }
+        .step[data-step="2"]::after { background: var(--line-color-2, var(--vscode-panel-border)); }
+        .step[data-step="3"]::after { background: var(--line-color-3, var(--vscode-panel-border)); }
         .step-number-wrapper { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .step-number { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; background: #6c757d; color: white; border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: all 0.3s ease; }
+        .step-number { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: all 0.3s ease; }
         .step-content { flex: 1; display: flex; align-items: center; gap: 15px; }
-        .step-text { flex: 1; color: #1e3c72; font-size: 14px; font-weight: 500; line-height: 1.5; }
+        .step-text { flex: 1; color: var(--vscode-foreground); font-size: 14px; font-weight: 500; line-height: 1.5; }
         .step-actions { display: flex; gap: 8px; flex-shrink: 0; }
-        button { background: #1e3c72; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; font-size: 13px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25); white-space: nowrap; }
-        button:hover { background: #2a5298; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35); }
+        button { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; font-size: 13px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); white-space: nowrap; }
+        button:hover { background: var(--vscode-button-hoverBackground); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); }
         button:active { transform: translateY(0); }
         .checkmark-icon {
             display: inline-flex;
@@ -195,29 +160,29 @@
             stroke-linejoin: round;
             fill: none;
         }
-        .docs-section { margin-top: 25px; padding-top: 25px; border-top: 2px solid #f0f0f0; }
-        .docs-section h2 { color: #1e3c72; font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+        .docs-section { margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--vscode-panel-border); }
+        .docs-section h2 { color: var(--vscode-foreground); font-size: 18px; margin-bottom: 15px; font-weight: 600; }
         .docs-section ul { list-style: none; padding: 0; }
         .docs-section li { margin: 12px 0; padding-left: 25px; position: relative; }
-        .docs-section li:before { content: "→"; position: absolute; left: 0; color: #2a5298; font-weight: bold; }
-        .docs-section a { color: #2a5298; text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
-        .docs-section a:hover { color: #1e3c72; text-decoration: underline; }
+        .docs-section li:before { content: "→"; position: absolute; left: 0; color: var(--vscode-textLink-foreground); font-weight: bold; }
+        .docs-section a { color: var(--vscode-textLink-foreground); text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+        .docs-section a:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
         .quick-start-header-section { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; gap: 20px; }
         .quick-start-text { flex: 1; }
-        .quick-start-title { color: #1e3c72; font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px; text-align: left; }
-        .quick-start-subtitle { color: #5a6c7d; font-size: 15px; line-height: 1.6; }
-        .agent-card { background: #f3f4f5; padding: 16px 20px; border-radius: 6px; border-left: 4px solid #2a5298; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; }
-        .agent-card h3 { color: #1e3c72; font-size: 15px; font-weight: 600; margin: 0; white-space: nowrap; }
-        .agent-warning { display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #856404; line-height: 1.5; }
+        .quick-start-title { color: var(--vscode-foreground); font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px; text-align: left; }
+        .quick-start-subtitle { color: var(--vscode-descriptionForeground); font-size: 15px; line-height: 1.6; }
+        .agent-card { background: var(--vscode-editorWidget-background); padding: 16px 20px; border-radius: 6px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; border: 2px solid var(--vscode-widget-border); border-left: 4px solid var(--vscode-foreground); }
+        .agent-card h3 { color: var(--vscode-foreground); font-size: 15px; font-weight: 600; margin: 0; white-space: nowrap; }
+        .agent-warning { display: none; background: var(--vscode-inputValidation-warningBackground); border: 1px solid var(--vscode-inputValidation-warningBorder); border-radius: 4px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: var(--vscode-inputValidation-warningForeground); line-height: 1.5; }
         .agent-warning.show { display: block; }
-        .agent-warning strong { color: #664d03; }
+        .agent-warning strong { color: inherit; }
         .agent-selection { display: flex; gap: 20px; flex: 1; }
-        .agent-selection label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; white-space: nowrap; }
+        .agent-selection label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--vscode-foreground); white-space: nowrap; }
         .agent-selection input[type="radio"] { cursor: pointer; width: 16px; height: 16px; }
         .quick-start-btn { 
             display: inline-flex; 
             align-items: center; 
-            color: white; 
+            color: var(--vscode-button-foreground); 
             font-size: 13px; 
             padding: 8px 20px; 
             font-weight: 600;
@@ -225,33 +190,33 @@
             cursor: pointer; 
             border-radius: 5px; 
             transition: all 0.2s ease; 
-            box-shadow: 0 2px 6px rgba(42, 82, 152, 0.25); 
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); 
             white-space: nowrap; 
         }
-        .quick-start-btn:hover { background: #2a5298; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42, 82, 152, 0.35); }
+        .quick-start-btn:hover { background: var(--vscode-button-hoverBackground); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); }
         .quick-start-btn:active { transform: translateY(0); }
-        .step-number.pending { background: #6c757d; }
-        .step-number.doing { background: #ffa500; animation: pulse 1.5s ease-in-out infinite; box-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
-        .step-number.done { background: #28a745; }
-        .step-number.error { background: #dc3545; }
-        .steps-container.step-1-pending { --line-color-1: #d0d1d2; }
-        .steps-container.step-1-doing { --line-color-1: #ffa500; }
-        .steps-container.step-1-done { --line-color-1: #28a745; }
-        .steps-container.step-1-error { --line-color-1: #dc3545; }
-        .steps-container.step-2-pending { --line-color-2: #f0f0f0; }
-        .steps-container.step-2-doing { --line-color-2: #ffa500; }
-        .steps-container.step-2-done { --line-color-2: #28a745; }
-        .steps-container.step-2-error { --line-color-2: #dc3545; }
-        .steps-container.step-3-pending { --line-color-3: #f0f0f0; }
-        .steps-container.step-3-doing { --line-color-3: #ffa500; }
-        .steps-container.step-3-done { --line-color-3: #28a745; }
-        .steps-container.step-3-error { --line-color-3: #dc3545; }
-        .steps-container.step-4-pending { --line-color-4: #f0f0f0; }
-        .steps-container.step-4-doing { --line-color-4: #ffa500; }
-        .steps-container.step-4-done { --line-color-4: #28a745; }
-        .steps-container.step-4-error { --line-color-4: #dc3545; }
-        .step.done button {  background: #28a745; }
-        .step.done button:hover { background: #218838; }
+        .step-number.pending { background: var(--vscode-badge-background); }
+        .step-number.doing { background: var(--vscode-charts-orange, #ffa500); animation: pulse 1.5s ease-in-out infinite; box-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
+        .step-number.done { background: var(--vscode-testing-iconPassed, #28a745); }
+        .step-number.error { background: var(--vscode-testing-iconFailed, #dc3545); }
+        .steps-container.step-1-pending { --line-color-1: var(--vscode-panel-border); }
+        .steps-container.step-1-doing { --line-color-1: var(--vscode-charts-orange, #ffa500); }
+        .steps-container.step-1-done { --line-color-1: var(--vscode-testing-iconPassed, #28a745); }
+        .steps-container.step-1-error { --line-color-1: var(--vscode-testing-iconFailed, #dc3545); }
+        .steps-container.step-2-pending { --line-color-2: var(--vscode-panel-border); }
+        .steps-container.step-2-doing { --line-color-2: var(--vscode-charts-orange, #ffa500); }
+        .steps-container.step-2-done { --line-color-2: var(--vscode-testing-iconPassed, #28a745); }
+        .steps-container.step-2-error { --line-color-2: var(--vscode-testing-iconFailed, #dc3545); }
+        .steps-container.step-3-pending { --line-color-3: var(--vscode-panel-border); }
+        .steps-container.step-3-doing { --line-color-3: var(--vscode-charts-orange, #ffa500); }
+        .steps-container.step-3-done { --line-color-3: var(--vscode-testing-iconPassed, #28a745); }
+        .steps-container.step-3-error { --line-color-3: var(--vscode-testing-iconFailed, #dc3545); }
+        .steps-container.step-4-pending { --line-color-4: var(--vscode-panel-border); }
+        .steps-container.step-4-doing { --line-color-4: var(--vscode-charts-orange, #ffa500); }
+        .steps-container.step-4-done { --line-color-4: var(--vscode-testing-iconPassed, #28a745); }
+        .steps-container.step-4-error { --line-color-4: var(--vscode-testing-iconFailed, #dc3545); }
+        .step.done button {  background: var(--vscode-testing-iconPassed, #28a745); }
+        .step.done button:hover { background: var(--vscode-testing-iconPassed, #218838); filter: brightness(0.9); }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         
         .tab-panel {
@@ -285,7 +250,7 @@
         }
         
         .modal-content {
-            background: white;
+            background: var(--vscode-editorWidget-background);
             border-radius: 12px;
             padding: 30px;
             max-width: 600px;
@@ -293,6 +258,8 @@
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--vscode-widget-border);
+            color: var(--vscode-foreground);
         }
         
         .modal-header {
@@ -301,11 +268,11 @@
             justify-content: space-between;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 1px solid var(--vscode-panel-border);
         }
         
         .modal-title {
-            color: #1e3c72;
+            color: var(--vscode-foreground);
             font-size: 22px;
             font-weight: 600;
             margin: 0;
@@ -315,7 +282,7 @@
             background: none;
             border: none;
             font-size: 24px;
-            color: #6c757d;
+            color: var(--vscode-descriptionForeground);
             cursor: pointer;
             padding: 0;
             width: 32px;
@@ -328,7 +295,7 @@
         }
         
         .modal-close:hover {
-            background: #f0f0f0;
+            background: var(--vscode-toolbar-hoverBackground);
             transform: none;
         }
         
@@ -339,19 +306,19 @@
         .param-label {
             display: block;
             font-weight: 600;
-            color: #1e3c72;
+            color: var(--vscode-foreground);
             margin-bottom: 8px;
             font-size: 14px;
         }
         
         .param-required {
-            color: #dc3545;
+            color: var(--vscode-errorForeground);
             margin-left: 4px;
         }
         
         .param-description {
             font-size: 12px;
-            color: #6c757d;
+            color: var(--vscode-descriptionForeground);
             margin-bottom: 8px;
             line-height: 1.4;
         }
@@ -359,16 +326,18 @@
         .param-input {
             width: 100%;
             padding: 10px 12px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid var(--vscode-input-border);
             border-radius: 6px;
             font-size: 14px;
             font-family: inherit;
             transition: border-color 0.2s ease;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
         }
         
         .param-input:focus {
             outline: none;
-            border-color: #2a5298;
+            border-color: var(--vscode-focusBorder);
         }
         
         .param-input[type="checkbox"] {
@@ -382,7 +351,7 @@
             justify-content: flex-end;
             margin-top: 24px;
             padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
+            border-top: 1px solid var(--vscode-panel-border);
         }
         
         .modal-actions button {
@@ -390,26 +359,28 @@
         }
         
         .btn-secondary {
-            background: #6c757d;
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
         }
         
         .btn-secondary:hover {
-            background: #5a6268;
+            background: var(--vscode-button-secondaryHoverBackground);
         }
         
         .no-params-message {
             padding: 20px;
-            background: #f3f4f5;
+            background: var(--vscode-editorWidget-background);
             border-radius: 8px;
             text-align: center;
-            color: #5a6c7d;
+            color: var(--vscode-descriptionForeground);
             font-size: 14px;
+            border: 1px solid var(--vscode-widget-border);
         }
         
         .tool-params-section {
             padding: 16px;
-            background: #fafbfc;
-            border-top: 1px solid #e0e0e0;
+            background: transparent;
+            border-top: 1px solid var(--vscode-panel-border);
             display: none;
         }
         
@@ -428,19 +399,19 @@
         .tool-param-label {
             display: block;
             font-weight: 600;
-            color: #1e3c72;
+            color: var(--vscode-foreground);
             margin-bottom: 6px;
             font-size: 13px;
         }
         
         .tool-param-required {
-            color: #dc3545;
+            color: var(--vscode-errorForeground);
             margin-left: 4px;
         }
         
         .tool-param-description {
             font-size: 11px;
-            color: #6c757d;
+            color: var(--vscode-descriptionForeground);
             margin-bottom: 6px;
             line-height: 1.4;
         }
@@ -448,17 +419,18 @@
         .tool-param-input {
             width: 100%;
             padding: 8px 10px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid var(--vscode-input-border);
             border-radius: 4px;
             font-size: 13px;
             font-family: inherit;
             transition: border-color 0.2s ease;
-            background: white;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
         }
         
         .tool-param-input:focus {
             outline: none;
-            border-color: #2a5298;
+            border-color: var(--vscode-focusBorder);
         }
         
         .tool-param-input[type="checkbox"] {
@@ -471,7 +443,7 @@
             gap: 8px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid var(--vscode-panel-border);
         }
         
         .tool-actions button {
@@ -488,7 +460,7 @@
         }
         
         .tool-run-button-disabled {
-            background: #9e9e9e !important;
+            background: var(--vscode-disabledForeground) !important;
             cursor: not-allowed !important;
             opacity: 0.6;
             pointer-events: none;
@@ -498,7 +470,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #1976d2;
+            color: var(--vscode-activityBar-inactiveForeground);
             font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
@@ -512,11 +484,11 @@
             <div class="tab-button active" onclick="switchTab('wizard')">
                 <div class="tab-icon" style="padding: 3px;">
                     <svg viewBox="0 0 92.796 99.806" xmlns="http://www.w3.org/2000/svg">
-                        <path style="fill:#ffffff;fill-opacity:1;stroke:#f9f9f9;stroke-width:3.421;stroke-linecap:round;stroke-linejoin:round" d="m 72.509,32.896 -6.189,-6.522 -64.61,64.609 5.598,7.112 z"/>
-                        <path style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:3.273;stroke-linecap:round;stroke-linejoin:round" d="M 85.08,8.458 73.354,20.184 79.275,26.424 91.16,14.539 Z"/>
+                        <path d="m 72.509,32.896 -6.189,-6.522 -64.61,64.609 5.598,7.112 z"/>
+                        <path d="M 85.08,8.458 73.354,20.184 79.275,26.424 91.16,14.539 Z"/>
                         <g transform="translate(-50.609,-53.766)">
-                            <path style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2.822;stroke-linecap:round;stroke-linejoin:round" d="m 81.272,88.466 c -0.027,-0.725 -2.635,-6.057 -3.807,-7.785 -0.681,-1.004 -1.919,-2.543 -2.752,-3.42 -1.596,-1.681 -4.987,-4.255 -6.49,-4.927 -0.491,-0.219 -0.892,-0.447 -0.891,-0.507 0.001,-0.059 0.535,-0.378 1.186,-0.707 3.392,-1.715 7.479,-5.56 9.605,-9.036 1.1,-1.8 3.127,-6.093 3.133,-6.637 0.002,-0.149 0.092,-0.27 0.202,-0.27 0.109,0 0.199,0.099 0.199,0.22 0,0.56 1.93,4.615 3.125,6.566 2.318,3.784 5.523,6.862 9.301,8.935 l 1.779,0.976 -1.979,1.112 c -3.078,1.73 -5.257,3.569 -7.383,6.23 -1.874,2.345 -2.934,4.259 -4.892,8.829 -0.178,0.416 -0.33,0.605 -0.337,0.42 z"/>
-                            <path style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2.332;stroke-linecap:round;stroke-linejoin:round" d="m 117.137,147.303 c -0.023,-0.599 -2.177,-5.005 -3.146,-6.433 -0.563,-0.83 -1.586,-2.101 -2.274,-2.826 -1.319,-1.389 -4.12,-3.516 -5.363,-4.071 -0.406,-0.181 -0.737,-0.37 -0.736,-0.419 0.001,-0.049 0.442,-0.312 0.98,-0.584 2.803,-1.417 6.18,-4.594 7.937,-7.466 0.909,-1.487 2.584,-5.035 2.589,-5.484 0.001,-0.123 0.076,-0.223 0.167,-0.223 0.09,0 0.164,0.082 0.164,0.182 0,0.463 1.595,3.814 2.582,5.425 1.916,3.127 4.564,5.67 7.685,7.383 l 1.47,0.806 -1.635,0.919 c -2.543,1.43 -4.344,2.949 -6.1,5.148 -1.548,1.938 -2.424,3.519 -4.042,7.296 -0.147,0.344 -0.273,0.5 -0.278,0.347 z"/>
+                            <path d="m 81.272,88.466 c -0.027,-0.725 -2.635,-6.057 -3.807,-7.785 -0.681,-1.004 -1.919,-2.543 -2.752,-3.42 -1.596,-1.681 -4.987,-4.255 -6.49,-4.927 -0.491,-0.219 -0.892,-0.447 -0.891,-0.507 0.001,-0.059 0.535,-0.378 1.186,-0.707 3.392,-1.715 7.479,-5.56 9.605,-9.036 1.1,-1.8 3.127,-6.093 3.133,-6.637 0.002,-0.149 0.092,-0.27 0.202,-0.27 0.109,0 0.199,0.099 0.199,0.22 0,0.56 1.93,4.615 3.125,6.566 2.318,3.784 5.523,6.862 9.301,8.935 l 1.779,0.976 -1.979,1.112 c -3.078,1.73 -5.257,3.569 -7.383,6.23 -1.874,2.345 -2.934,4.259 -4.892,8.829 -0.178,0.416 -0.33,0.605 -0.337,0.42 z"/>
+                            <path d="m 117.137,147.303 c -0.023,-0.599 -2.177,-5.005 -3.146,-6.433 -0.563,-0.83 -1.586,-2.101 -2.274,-2.826 -1.319,-1.389 -4.12,-3.516 -5.363,-4.071 -0.406,-0.181 -0.737,-0.37 -0.736,-0.419 0.001,-0.049 0.442,-0.312 0.98,-0.584 2.803,-1.417 6.18,-4.594 7.937,-7.466 0.909,-1.487 2.584,-5.035 2.589,-5.484 0.001,-0.123 0.076,-0.223 0.167,-0.223 0.09,0 0.164,0.082 0.164,0.182 0,0.463 1.595,3.814 2.582,5.425 1.916,3.127 4.564,5.67 7.685,7.383 l 1.47,0.806 -1.635,0.919 c -2.543,1.43 -4.344,2.949 -6.1,5.148 -1.548,1.938 -2.424,3.519 -4.042,7.296 -0.147,0.344 -0.273,0.5 -0.278,0.347 z"/>
                         </g>
                     </svg>
                 </div>
@@ -526,12 +498,15 @@
             <div class="tab-button" onclick="switchTab('tools')">
                 <div class="tab-icon" style="padding: 3px;">
                     <svg viewBox="0 0 107.688 109.773" xmlns="http://www.w3.org/2000/svg">
-                        <g transform="translate(-45.471,-18.226)">
-                            <path style="fill:#ffffff" d="m 125.866,18.410 c -10.741,1.436 -19.373,10.067 -20.810,20.808 -0.232,1.737 -0.232,4.595 0,6.331 1.437,10.741 10.068,19.373 20.810,20.810 1.737,0.232 4.595,0.232 6.331,0 10.927,-1.462 19.669,-10.369 20.876,-21.369 0.157,-1.433 0.105,-3.783 -0.194,-5.191 -0.274,-1.292 -2.066,-0.911 -3.771,0.793 l -8.082,8.076 c -0.979,0.979 -2.565,2.622 -3.808,3.216 -0.681,0.325 -1.396,0.535 -2.112,0.620 -1.719,0.206 -4.385,-1.075 -5.972,-1.821 -0.999,-0.470 -3.141,-1.429 -4.468,-2.567 -0.456,-0.391 -0.880,-0.816 -1.270,-1.273 -1.135,-1.329 -2.314,-3.950 -3.057,-5.539 -0.467,-0.997 -1.518,-3.187 -1.311,-4.905 0.061,-0.504 0.183,-1.007 0.363,-1.498 0.600,-1.633 2.728,-3.636 3.970,-4.874 2.982,-2.974 5.894,-6.022 8.894,-8.978 1.248,-1.230 0.893,-2.557 -0.850,-2.731 -1.306,-0.130 -3.803,-0.140 -5.540,0.092 z"/>
-                        </g>
-                        <g transform="translate(-45.471,-18.226)">
-                            <path style="fill:#ffffff;fill-opacity:0;stroke:#ffffff;stroke-width:18.9;stroke-linecap:round;stroke-linejoin:round" d="M 54.921,118.549 115.535,57.935"/>
-                        </g>
+                        <defs>
+                            <mask id="wrench-mask">
+                                <g transform="translate(-45.471,-18.226)">
+                                    <path fill="white" d="m 125.866,18.410 c -10.741,1.436 -19.373,10.067 -20.810,20.808 -0.232,1.737 -0.232,4.595 0,6.331 1.437,10.741 10.068,19.373 20.810,20.810 1.737,0.232 4.595,0.232 6.331,0 10.927,-1.462 19.669,-10.369 20.876,-21.369 0.157,-1.433 0.105,-3.783 -0.194,-5.191 -0.274,-1.292 -2.066,-0.911 -3.771,0.793 l -8.082,8.076 c -0.979,0.979 -2.565,2.622 -3.808,3.216 -0.681,0.325 -1.396,0.535 -2.112,0.620 -1.719,0.206 -4.385,-1.075 -5.972,-1.821 -0.999,-0.470 -3.141,-1.429 -4.468,-2.567 -0.456,-0.391 -0.880,-0.816 -1.270,-1.273 -1.135,-1.329 -2.314,-3.950 -3.057,-5.539 -0.467,-0.997 -1.518,-3.187 -1.311,-4.905 0.061,-0.504 0.183,-1.007 0.363,-1.498 0.600,-1.633 2.728,-3.636 3.970,-4.874 2.982,-2.974 5.894,-6.022 8.894,-8.978 1.248,-1.230 0.893,-2.557 -0.850,-2.731 -1.306,-0.130 -3.803,-0.140 -5.540,0.092 z"/>
+                                    <path fill="none" stroke="white" stroke-width="18.9" stroke-linecap="round" stroke-linejoin="round" d="M 54.921,118.549 115.535,57.935"/>
+                                </g>
+                            </mask>
+                        </defs>
+                        <rect width="100%" height="100%" fill="currentColor" mask="url(#wrench-mask)"/>
                     </svg>
                 </div>
                 <span>MCP Tools</span>
@@ -541,8 +516,8 @@
                 <div class="tab-icon" style="padding: 1px;">
                     <svg viewBox="0 0 181.541 119.165" xmlns="http://www.w3.org/2000/svg">
                         <g transform="translate(-31.009,-102.577)">
-                            <path style="fill:#ffffff;fill-opacity:0;stroke:#ffffff;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round" d="M 103.546,137.506 H 40.775 v 75.477 h 62.662 m 0.109,-75.477 h 62.771 v 75.477 h -62.662" transform="translate(18.234,-29.180)"/>
-                            <path style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round" d="m 103.546,137.507 0.003,48.045 h 2.908 79.706 l -18.004,-47.390 z m 0,0 -64.613,0.655 -18.005,47.390 h 79.706 2.909 z" transform="matrix(1.027,0,0,0.481,15.418,129.675)"/>
+                            <path style="fill:none;stroke:currentColor;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round" d="M 103.546,137.506 H 40.775 v 75.477 h 62.662 m 0.109,-75.477 h 62.771 v 75.477 h -62.662" transform="translate(18.234,-29.180)"/>
+                            <path d="m 103.546,137.507 0.003,48.045 h 2.908 79.706 l -18.004,-47.390 z m 0,0 -64.613,0.655 -18.005,47.390 h 79.706 2.909 z" transform="matrix(1.027,0,0,0.481,15.418,129.675)"/>
                         </g>
                     </svg>
                 </div>
@@ -629,10 +604,13 @@
                 <div id="tools-panel" class="tab-panel">
                     <div class="unified-card" id="tools-card">
                         <div class="header">
-                            <h1 style="color: #1e3c72; font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px;">Bluetext Tools</h1>
+                            <h1>Bluetext Tools</h1>
                             <p class="subtitle">Available MCP tools from your Bluetext server</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <div style="background: var(--vscode-button-background); color: var(--vscode-button-foreground); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg viewBox="0 0 107.688 109.773" style="width: 20px; height: 20px;" xmlns="http://www.w3.org/2000/svg"><g transform="translate(-45.471,-18.226)"><path style="fill:currentColor" d="m 125.866,18.410 c -10.741,1.436 -19.373,10.067 -20.810,20.808 -0.232,1.737 -0.232,4.595 0,6.331 1.437,10.741 10.068,19.373 20.810,20.810 1.737,0.232 4.595,0.232 6.331,0 10.927,-1.462 19.669,-10.369 20.876,-21.369 0.157,-1.433 0.105,-3.783 -0.194,-5.191 -0.274,-1.292 -2.066,-0.911 -3.771,0.793 l -8.082,8.076 c -0.979,0.979 -2.565,2.622 -3.808,3.216 -0.681,0.325 -1.396,0.535 -2.112,0.620 -1.719,0.206 -4.385,-1.075 -5.972,-1.821 -0.999,-0.470 -3.141,-1.429 -4.468,-2.567 -0.456,-0.391 -0.880,-0.816 -1.270,-1.273 -1.135,-1.329 -2.314,-3.950 -3.057,-5.539 -0.467,-0.997 -1.518,-3.187 -1.311,-4.905 0.061,-0.504 0.183,-1.007 0.363,-1.498 0.600,-1.633 2.728,-3.636 3.970,-4.874 2.982,-2.974 5.894,-6.022 8.894,-8.978 1.248,-1.230 0.893,-2.557 -0.850,-2.731 -1.306,-0.130 -3.803,-0.140 -5.540,0.092 z"/></g><g transform="translate(-45.471,-18.226)"><path style="fill:none;stroke:currentColor;stroke-width:18.9;stroke-linecap:round;stroke-linejoin:round" d="M 54.921,118.549 115.535,57.935"/></g></svg>
+                            </div>
                             <button onclick="refreshTools()" style="padding: 8px 16px; display: flex; align-items: center; gap: 6px;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                                     <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
@@ -653,7 +631,7 @@
                 <div id="console-panel" class="tab-panel">
                     <div class="unified-card" id="console-card">
                         <div class="header">
-                            <h1 style="color: #1e3c72; font-size: 27px; font-weight: 400; margin-bottom: 8px; letter-spacing: 0.4px;">
+                            <h1>
                                 Debug Console
                             </h1>
                             <p class="subtitle">Server communication logs</p>
